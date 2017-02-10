@@ -38,17 +38,28 @@ void *thread_client(void *arg)
 /*------------------------------------------------------*/
 void renvoi (int sock) {
     char buffer[256];
+    char answer[256];
     int longueur;
     if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0) 
-return;
+        return;
     printf("message lu : %s \n", buffer);
-    buffer[longueur] = '#';
-    buffer[longueur+1] ='\0';
-    printf("message apres traitement : %s \n", buffer);  
+
+    if (strcmp(buffer, "init") == 0){
+        //clone ?
+    } else if (strcmp(buffer, "pull") == 0){
+        strcpy(answer,"Sending files");
+        //send
+    } else if (strcmp(buffer, "push") == 0){
+        strcpy(answer,"Waiting for files");
+        //recv
+    } else {
+       strcpy(answer,"Pouet");
+    }
+    printf("message apres traitement : %s \n", answer);  
     printf("renvoi du message traite.\n");
     /* mise en attente du programme pour simuler un delai de transmission */
     sleep(3);
-    write(sock,buffer,strlen(buffer)+1);    
+    write(sock,answer,strlen(answer)+1);    
     printf("message envoye. \n");       
     return;
 }

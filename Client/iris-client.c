@@ -101,13 +101,13 @@ int main(int argc, char **argv) {
     }
     char* command = argv[1];
     if (strcmp(command, "init") == 0){
-    	say("Init");
+    	say("init");
     	//clone ?
     } else if (strcmp(command, "pull") == 0){
-		say("Pull");
+		say("pull");
 		//reicv
    	} else if (strcmp(command, "push") == 0){
-    	say("Push");
+    	say("push");
     	//send
    	} else {
    		printf("%s : unknown command, please read the following :\n", command);
