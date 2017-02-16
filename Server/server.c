@@ -40,20 +40,26 @@ void renvoi (int sock) {
     char buffer[256];
     char answer[256];
     int longueur;
-    if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0) 
-        return;
-    printf("message lu : %s \n", buffer);
 
-    if (strcmp(buffer, "init") == 0){
-        //clone ?
-    } else if (strcmp(buffer, "pull") == 0){
+    FILE * file;
+    if((file = fopen("test.txt","w+")) != NULL){
+        read(sock, buffer, sizeof(buffer));
+        printf("lu : %s", buffer);
+        fwrite(buffer, 1, strlen(buffer), file);
+    } else {
+        perror("Cannot open file");
+    }
+    //if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0) 
+    //    return;
+    printf("\n");
+    if (strcmp(buffer, "pull") == 0){
         strcpy(answer,"Sending files");
         //send
     } else if (strcmp(buffer, "push") == 0){
-        strcpy(answer,"Waiting for files");
+        strcpy(answer,"OK");
         //recv
     } else {
-       strcpy(answer,"Pouet");
+        strcpy(answer,"Otherwise");
     }
     printf("message apres traitement : %s \n", answer);  
     printf("renvoi du message traite.\n");
