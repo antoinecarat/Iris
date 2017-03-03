@@ -177,6 +177,8 @@ void send_file(int server_socket, char * file_path)
     char *fileBuffer = (char *) malloc(256);
     FILE * file;
 
+    printf("Sending file : %s\n", file_path);
+
     if ((file = fopen(file_path, "r")) != NULL)
     {
         //Read file contents into buffer
@@ -185,14 +187,13 @@ void send_file(int server_socket, char * file_path)
         //int sent;
         int i;
         char c;
-        for (i = 0; i < 255; ++i)
+        for (i = 0; i < 255 ; ++i)
         {
             c = fgetc(file);
             fileBuffer[i] = (char) c;
         }
         // don't forget to terminate with the null character
-        fileBuffer[255] = '\0';  
-
+        fileBuffer[255] = '\0';
         send_message(server_socket, fileBuffer);
         fclose(file);
     } else {
@@ -202,13 +203,14 @@ void send_file(int server_socket, char * file_path)
 
 char * receive_message(int server_socket)
 {
-    char * answer;
+    char * answer = malloc(256*sizeof(char));
     int a_length;
 
-    while((a_length = read(server_socket, answer, sizeof(answer))) > 0) {
+    //while((a_length = read(server_socket, answer, sizeof(answer))) > 0) {
+        read(server_socket, answer, sizeof(answer));
         printf("Answer: %s \n", answer);
-        write(1,answer,a_length);
-    }
+        //write(1,answer,a_length);
+    //}
 
     return answer;
 }
@@ -244,6 +246,7 @@ int main(int argc, char **argv)
         printf("%s\n", answer);
         if (strcmp(answer, "OK") == 0){
             send_file(server_socket, "test.txt");
+            //printf("Pouet\n");
         } else {
             perror("Server refused command.");
             exit(1);

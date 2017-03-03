@@ -22,10 +22,7 @@ typedef struct servent servent;
 
 void *thread_client(void *arg)
 {
-    printf("Nouveau client détecté !.\n");
-
     /* traitement du message */
-    printf("reception d'un message.\n");
     renvoi((int) arg);
     close((int) arg);
 
@@ -38,14 +35,14 @@ void *thread_client(void *arg)
 /*------------------------------------------------------*/
 void renvoi (int sock) {
     char buffer[256];
-    char answer[256];
+    char answer[256] = "KO";
     int longueur;
 
     FILE * file;
     if((file = fopen("test.txt","w+")) != NULL){
         read(sock, buffer, sizeof(buffer));
         printf("lu : %s", buffer);
-        fwrite(buffer, 1, strlen(buffer), file);
+        //fwrite(buffer, 1, strlen(buffer), file);
     } else {
         perror("Cannot open file");
     }
@@ -53,20 +50,20 @@ void renvoi (int sock) {
     //    return;
     printf("\n");
     if (strcmp(buffer, "pull") == 0){
-        strcpy(answer,"Sending files");
+        strcpy(answer,"OK");
         //send
     } else if (strcmp(buffer, "push") == 0){
         strcpy(answer,"OK");
-        //recv
+        write(sock,answer,strlen(answer)+1);    
+        sleep(6);
+        read(sock, buffer, sizeof(buffer));
+        printf("lu2 : %s", buffer);
+        //ready to receive
     } else {
         strcpy(answer,"Otherwise");
     }
-    printf("message apres traitement : %s \n", answer);  
-    printf("renvoi du message traite.\n");
     /* mise en attente du programme pour simuler un delai de transmission */
-    sleep(3);
-    write(sock,answer,strlen(answer)+1);    
-    printf("message envoye. \n");       
+    sleep(3);       
     return;
 }
 /*------------------------------------------------------*/
