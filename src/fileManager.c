@@ -3,7 +3,7 @@
  * @author M.Cherrueau & A.Carat
  * @since 05/03/2017
  * @brief all file utilities
-**/
+ */
 
  #include "fileManager.h"
 

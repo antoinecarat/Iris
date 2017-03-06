@@ -7,6 +7,12 @@
 #ifndef __IRISSERVER_H__
 #define __IRISSERVER_H__
 
+#include <pthread.h>
+#include <string.h>
+
+ #include "fileManager.h"
+ #include "networkManager.h"
+
 /**
  * @brief Create all server architecture.
 */

@@ -1,5 +1,14 @@
+/**
+ * @file iris-server.c
+ * @author M.Cherrueau & A.Carat
+ * @since 05/03/2017
+ * @brief Server's implementation
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "iris.h"
 
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
@@ -204,7 +213,12 @@ int connect_to_serv()
     //local socket adress
     sockaddr_in local_adress;
 
-    hostent* ptr_host = getHost();
+    hostent* ptr_host;
+
+    if ((ptr_host = gethostbyname(host)) == NULL) {
+        perror("Error: Cannot find server with this adress.\n");
+        exit(1);
+    }
 
     //copy ptr_host informations into local_adress
     bcopy((char*)ptr_host->h_addr, (char*)&local_adress.sin_addr, ptr_host->h_length);

@@ -7,6 +7,14 @@
 #ifndef __IRIS_H__
 #define __IRIS_H__
 
+
+#include <linux/types.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <string.h>
+
+
 /**
  * @brief Retrieving data from remote repository 
  * 

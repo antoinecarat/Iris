@@ -7,7 +7,19 @@
 #ifndef __NETWORKMANAGER_H__
 #define __NETWORKMANAGER_H__
 
+
+#include <linux/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include "fileManager.h"
+
+#define SERVER_PORT 5000
+
+typedef struct sockaddr sockaddr;
+typedef struct sockaddr_in sockaddr_in;
+typedef struct hostent hostent;
+typedef struct servent servent;
+
 
 /**
  * @brief Connect a client to server.
@@ -18,6 +30,13 @@
  * @return Server socket id 
 */
 int connect_to_server(char* name, unsigned int port);
+
+/**
+ * @brief Create server socket.
+ *
+ * @return Server socket id 
+*/
+int create_server_socket();
 
 /**
  * @brief Receive data

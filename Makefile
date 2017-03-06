@@ -19,7 +19,7 @@ doc: $(HEADERS)
 	doxygen Doxyfile
 
 clean:
-	rm -rf build/ bin/ doc/
+	rm -rf build/ bin/ doc/ .iris/ iris-server/
 
 $(TARGET-CLIENT): $(OBJECTS) $(OBJECTS-CLIENT)
 	@mkdir -p $(dir $@)
