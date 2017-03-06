@@ -1,19 +1,85 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <linux/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
 
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
+
+void pull(char* project_name, char* server_name, unsigned int server_port)
+{
+
+}
+
+void push(char* project_name, char* user_name, char* server_name, unsigned int server_port)
+{
+
+}
+
+void add(char* project_name, char* file_path)
+{
+
+}
+
+void del(char* project_name, char* file_path)
+{
+
+}
+
 void print_help(){
-	printf("Iris is a simple version control system. In this manual you'll find how to use it.\n");
-	printf("Usage : iris-client <command> <args>\n");
-	printf("Commands\n");
+    printf("Iris is a simple version control system. In this manual you'll find how to use it.\n");
+    printf("Usage : iris <command> <args>\n");
+    printf("\t add <file-name> : Add file to tracking.\n");
+    printf("\t del <file-name> : Remove file from tracking.\n");
+    printf("\t pull <project-name> <server-adress> <server-port> : Retrieve latest version of the project.\n");
+    printf("\t push <project-name> <user-name> <server-adress> <server-port> : Add a new version of the project.\n");
+    printf("\t help : Show this.\n");
+}
+
+
+int main(int argc, char **argv)
+{
+
+    char* command = argv[1];
+    if (argc == 2 && (strcmp(command, "help") == 0))
+    {
+       print_help();
+    } else if (argc > 2 && argc < 7)
+    {
+        char* file_name = argv[2];
+        char* server_adress;
+        char* server_port;
+        if (strcmp(command, "pull") == 0)
+        {
+            char* user_name = argv[3];
+            server_adress = argv[4];
+            server_port = argv[5];
+            //Prepare to receive latest version
+        } else if (strcmp(command, "push") == 0)
+        {            
+            server_adress = argv[3];
+            server_port = argv[4];
+            //Send whole repository with version note
+        }
+    } else if (argc == 4)
+    {
+        char* project_name = argv[2];
+        if (strcmp(command, "add") == 0)
+        {
+            //If new -> Add file to .iris/added
+            //Else -> Add file to .iris/modified
+        } else if (strcmp(command, "del") == 0)
+        {
+            //Add file to .iris/removed
+        }
+    } else
+    {
+        perror("Usage : iris <command> <args>.\n");
+        perror("Enter iris help to know more.\n");
+        exit(1);
+    }
+    exit(0);  
 }
 
 /*void sendFile(char * filePath){
@@ -105,7 +171,7 @@ void print_help(){
     printf("\nfin de la reception.\n");
     close(socket_descriptor);
     printf("connexion avec le serveur fermee, fin du programme.\n");
-}*/
+}
 
 
 hostent* getHost(){
@@ -213,50 +279,4 @@ char * receive_message(int server_socket)
     //}
 
     return answer;
-}
-
-int main(int argc, char **argv)
-{
-	if (argc < 2)
-    {
-        perror("Usage : iris-client <command> <args>");
-        exit(1);
-    }
-    //connect to server via .iris file
-    int server_socket = connect_to_serv();
-    //read and execute command
-    char* command = argv[1];
-    if (strcmp(command, "help") == 0)
-    {
-       print_help(); 
-    } else if (strcmp(command, "pull") == 0)
-    {
-        send_message(server_socket, "pull");
-        char * answer = receive_message(server_socket);
-        if (strcmp(answer, "OK")){
-            //Receive files.
-        } else {
-            perror("Server refused command.");
-            exit(1);
-        }
-   	} else if (strcmp(command, "push") == 0)
-    {
-    	send_message(server_socket, "push");
-        char * answer = receive_message(server_socket);
-        printf("%s\n", answer);
-        if (strcmp(answer, "OK") == 0){
-            send_file(server_socket, "test.txt");
-            //printf("Pouet\n");
-        } else {
-            perror("Server refused command.");
-            exit(1);
-        }
-   	} else
-    {
-   		printf("%s : unknown command, please read the following :\n", command);
-    	print_help();
-    }
-    close(server_socket);
-    printf("Connection closed.\n");
-    exit(0);  
-}
+}*/
