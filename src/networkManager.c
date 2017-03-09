@@ -5,10 +5,8 @@
  * @brief all network utilities
  */
 
-#include <linux/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "networkManager.h"
 
@@ -85,19 +83,24 @@ int create_server_socket()
 
 void receive_data()
 {
-
+	
 }
 
 void send_datagram(int socket, char * datagram)
 {
-
+    send(socket, &datagram, sizeof(datagram_t), 0);
 }
 
-void send_file(char* project_name, char* file_path, 
+void send_file(int socket, char* project_name, char* file_path, 
                transaction_t transaction, unsigned int version,
                char* user_name)
 {
-
+	datagram_t **data = prepare_file(project_name, file_path, transaction, version, user_name);
+	int i;
+	for (i = 0; i < sizeof(data); ++i)
+	{
+		send_datagram(socket, data[i]);
+	}
 }
 
 void send_dir(char* project_name, char* dir_path, 

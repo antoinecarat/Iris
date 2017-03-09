@@ -32,9 +32,16 @@ void wait_for_client();
 
 /**
  * @brief Treat client request.
+ * 
+ * @param client_socket client socket id.
 */
-void treat();
+void treat(int client_socket);
 
+/**
+ * @brief Create a new thread for client request.
+ * 
+ * @param arg client socket id.
+*/
 void *thread_client(void *arg);
 
 /**

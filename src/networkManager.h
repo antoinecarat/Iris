@@ -11,6 +11,7 @@
 #include <linux/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <string.h>
 #include "fileManager.h"
 
 #define SERVER_PORT 5000
@@ -55,13 +56,14 @@ void send_datagram(int socket, char * datagram);
 /**
  * @brief Send a file 
  *
+ * @param socket Socket where to send
  * @param project_name Name of the project. pouet
  * @param file_path Path of the file to be send. prout/file.truc
  * @param transaction Transaction type.
  * @param version Version of the project.
  * @param user_name Name of the user. 
 */
-void send_file(char* project_name, char* file_path, 
+void send_file(int socket, char* project_name, char* file_path, 
                transaction_t transaction, unsigned int version,
                char* user_name);
 

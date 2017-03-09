@@ -15,26 +15,139 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
-
-void pull(char* project_name, char* server_name, unsigned int server_port)
+void clone(char* project_name, char* server_adress, unsigned int server_port)
 {
-
+    int server_socket = connect_to_server(server_adress, server_port);
 }
 
-void push(char* project_name, char* user_name, char* server_name, unsigned int server_port)
+void create(char* project_name, char* server_adress, unsigned int server_port)
 {
+    int server_socket = connect_to_server(server_adress, server_port);
+}
 
+void pull(char* project_name, char* server_adress, unsigned int server_port)
+{
+    int server_socket = connect_to_server(server_adress, server_port);
+}
+
+void push(char* project_name, char* user_name, char* server_adress, unsigned int server_port)
+{
+    int server_socket = connect_to_server(server_adress, server_port);
 }
 
 void add(char* project_name, char* file_path)
 {
+    char* path;
+    strcpy(path, "iris/");
+    strcat(path, project_name);
+    strcat(path, "/added");
+    FILE * file;
+    if (file = fopen(path, "a") == NULL)
+    {
+        char* msg = "Error: \" ";
+        strcat(msg, project_name);
+        strcat(msg, "\" not found. Please clone project before adding file.");
+        perror(msg);
+    } else
+    {
+        strcat(file_path, "\n");
+        fwrite(file_path, sizeof(file_path)+2, 1, file);
+        fclose(file);
+    }
+}
 
+void mod(char* project_name, char* file_path)
+{
+    char* path;
+    strcpy(path, "iris/");
+    strcat(path, project_name);
+    strcat(path, "/modified");
+    FILE * file;
+    if (file = fopen(path, "a") == NULL)
+    {
+        char* msg = "Error: \" ";
+        strcat(msg, project_name);
+        strcat(msg, "\" not found. Please clone project before adding file.");
+        perror(msg);
+    } else
+    {
+        strcat(file_path, "\n");
+        fwrite(file_path, sizeof(file_path)+2, 1, file);
+        fclose(file);
+    }
 }
 
 void del(char* project_name, char* file_path)
 {
-
+    char* path;
+    strcpy(path, "iris/");
+    strcat(path, project_name);
+    strcat(path, "/removed");
+    FILE * file;
+    if (file = fopen(path, "a") == NULL)
+    {
+        char* msg = "Error: \" ";
+        strcat(msg, project_name);
+        strcat(msg, "\" not found. Please clone project before removing file.");
+        perror(msg);
+    } else
+    {
+        strcat(file_path, "\n");
+        fwrite(file_path, sizeof(file_path)+2, 1, file);
+        fclose(file);
+    }
 }
+
+void status(char* project_name)
+{
+    printf("%s status :\n", project_name);
+
+    FILE *file;
+    int i = 0;
+    char *path;
+    char *status;
+
+    for (i = 0; i < 3; ++i)
+    {
+        strcpy(path,"iris/");
+        strcat(path, project_name);
+        if (i == 0)
+        {
+            strcpy(status, "A");
+            strcat(path, "/added");
+        } else if (i == 1)
+        {
+            strcpy(status, "M");
+            strcat(path, "/modified");
+        } else {
+            strcpy(status, "D");
+            strcat(path, "/removed");
+        }
+
+        if((file = fopen(path,"r+")) != NULL)
+        {
+            char c = fgetc(file);
+            if (c != EOF)
+            {
+                printf("%s\t", status);
+                printf("%c",c);
+                while((c=fgetc(file))!=EOF){
+                    printf("%c",c);
+                    if (c == '\n')
+                    {
+                        printf("%s\t", status);
+                    }
+                }
+            }
+            fclose(file);
+        } else {
+            perror("Error : Cannot open file");
+            exit(1);
+        }
+    }
+}
+
+
 
 void print_help(){
     printf("Iris is a simple version control system. In this manual you'll find how to use it.\n");
@@ -51,36 +164,45 @@ int main(int argc, char **argv)
 {
 
     char* command = argv[1];
-    if (argc == 2 && (strcmp(command, "help") == 0))
+    if ((argc == 2) && (strcmp(command, "help") == 0))
     {
        print_help();
     } else if (argc > 2 && argc < 7)
     {
-        char* file_name = argv[2];
+        char* project_name = argv[2];
+        //TODO: save server adresse & port in ".iris/project_name/.server" the first time.
         char* server_adress;
         char* server_port;
-        if (strcmp(command, "pull") == 0)
+        
+        if (strcmp(command, "status") == 0)
         {
+            status(project_name);
+        } else if (strcmp(command, "pull") == 0)
+        {
+            server_adress = argv[3];
+            server_port = argv[4];
+            pull(project_name, server_adress, atoi(server_port));
+        } else if (strcmp(command, "push") == 0)
+        {            
             char* user_name = argv[3];
             server_adress = argv[4];
             server_port = argv[5];
-            //Prepare to receive latest version
-        } else if (strcmp(command, "push") == 0)
-        {            
-            server_adress = argv[3];
-            server_port = argv[4];
-            //Send whole repository with version note
+            push(project_name, user_name, server_adress, atoi(server_port));
+            int server_socket = connect_to_server(server_adress, atoi(server_port));
+            send_file(server_socket, project_name, "iris/testPush.txt", PUSH, 1, "cara");
         }
     } else if (argc == 4)
     {
-        char* project_name = argv[2];
+        char* file_name = argv[2];
         if (strcmp(command, "add") == 0)
         {
-            //If new -> Add file to .iris/added
-            //Else -> Add file to .iris/modified
+            //Add file to iris/../added
+        } else if (strcmp(command, "mod") == 0)
+        {
+            //Add file to iris/../modified
         } else if (strcmp(command, "del") == 0)
         {
-            //Add file to .iris/removed
+            //Add file to iris/../removed
         }
     } else
     {

@@ -1,5 +1,5 @@
 CC := gcc # This is the main compiler
-CFLAGS := -Wall -pthread
+CFLAGS := -Wall -pthread -g
 
 SRCDIR := src
 BUILDDIR := build
@@ -19,7 +19,7 @@ doc: $(HEADERS)
 	doxygen Doxyfile
 
 clean:
-	rm -rf build/ bin/ doc/ .iris/ iris-server/
+	rm -rf build/ bin/ doc/ iris/ iris-server/
 
 $(TARGET-CLIENT): $(OBJECTS) $(OBJECTS-CLIENT)
 	@mkdir -p $(dir $@)

@@ -8,6 +8,7 @@
 #define __FILEMANAGER_H__
 
 #include <sys/stat.h>
+#include <libgen.h>
 
 #define DATASIZE 256
 #define STRINGSIZE 256
@@ -17,6 +18,8 @@
  * @brief   All transaction available in iris.
  */
 enum transaction_e {
+  CLONE,
+  INIT,
   PULL,
   PUSH,
   MKDIR,  //Create this repository
