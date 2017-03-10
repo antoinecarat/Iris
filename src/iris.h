@@ -17,6 +17,11 @@
 #include "networkManager.h"
 
 /**
+ * @brief Create whole client architecture
+*/
+void init();
+
+/**
  * @brief Retrieve project from server for the first time.
  * 
  * @param project_name Name of the project

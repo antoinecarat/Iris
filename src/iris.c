@@ -15,6 +15,15 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
+void init()
+{
+    create_dir("iris");
+    create_dir("iris/projects");
+    FILE * file;
+    file = fopen("iris/.projects", "w+");
+    fclose(file);
+}
+
 void clone(char* project_name, char* server_adress, unsigned int server_port)
 {
     int server_socket = connect_to_server(server_adress, server_port);
@@ -164,9 +173,15 @@ int main(int argc, char **argv)
 {
 
     char* command = argv[1];
-    if ((argc == 2) && (strcmp(command, "help") == 0))
+    if (argc == 2)
     {
-       print_help();
+        if (strcmp(command, "help") == 0)
+        {
+            print_help();
+        } else if (strcmp(command, "init") == 0)
+        {
+            init();
+        }
     } else if (argc > 2 && argc < 7)
     {
         char* project_name = argv[2];
@@ -189,7 +204,9 @@ int main(int argc, char **argv)
             server_port = argv[5];
             push(project_name, user_name, server_adress, atoi(server_port));
             int server_socket = connect_to_server(server_adress, atoi(server_port));
-            send_file(server_socket, project_name, "iris/testPush.txt", PUSH, 1, "cara");
+
+            transaction_t t = PUSH;
+            send_file(server_socket, project_name, "iris/testPush.txt", t , 1, "cara");
         }
     } else if (argc == 4)
     {

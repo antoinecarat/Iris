@@ -35,4 +35,4 @@ bin/
 *.su
 
 iris-server/
-.iris/
+iris/

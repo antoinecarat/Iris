@@ -15,7 +15,7 @@ void init()
     create_dir("iris-server");
     create_dir("iris-server/projects");
     FILE * file;
-    file = fopen("iris-server/.project", "w+");
+    file = fopen("iris-server/.projects", "w+");
     fclose(file);
 }
 
@@ -46,14 +46,12 @@ void wait_for_client()
 
         if ((client_socket_descriptor = accept(socket_descriptor, (sockaddr*)(&current_client_adress), &current_adress_size)) < 0) {
             perror("Error: Cannot accept client connection.");
-            exit(1);
         }
 
         pthread_t thread1;
 
         if(pthread_create(&thread1, NULL, thread_client, (void*)client_socket_descriptor) == -1) {
             perror("Error: Cannot treat client request.");
-            exit(1);
         }
 
     } 
@@ -61,6 +59,7 @@ void wait_for_client()
 
 void *thread_client(void *arg)
 {
+    printf("Receiving a request...\n");
     treat((int) arg);
     close((int) arg);
 
@@ -69,10 +68,12 @@ void *thread_client(void *arg)
 
 void treat(int client_socket)
 {
-    datagram_t datagram;
+    char* serial = malloc(9 * DATASIZE);
 
-    if(recv(client_socket, &datagram, sizeof(datagram_t), 0) > 0) {
-        switch(datagram.transaction) {
+    if(recv(client_socket, serial, 9 * DATASIZE, 0) > 0) {
+        datagram_t * datagram = unserialize(serial);
+        printf("%d\n", datagram->transaction);
+        switch(datagram->transaction) {
           case PULL:
             printf("Pull request...\n");
             //Construct path and send_dir

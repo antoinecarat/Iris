@@ -14,7 +14,7 @@
  #include "networkManager.h"
 
 /**
- * @brief Create all server architecture.
+ * @brief Create whole server architecture.
 */
 void init();
 

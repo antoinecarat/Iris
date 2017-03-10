@@ -61,6 +61,24 @@ struct datagram_st {
 
 typedef struct datagram_st datagram_t;
 
+/**
+ * @brief Serialize a datagram.
+ *
+ * @param Datagram to be serialized
+ *
+ * @return A string representing datagram.
+ */
+char* serialize(datagram_t* datagram);
+
+/**
+ * @brief Unserialize a datagram.
+ *
+ * @param String to be unserialized
+ *
+ * @return A datagram.
+ */
+datagram_t* unserialize(char * serial);
+
 
 /**
  * @brief Prepare a file for sending by cutting it into datagrams.

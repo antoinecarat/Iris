@@ -86,18 +86,22 @@ void receive_data()
 	
 }
 
-void send_datagram(int socket, char * datagram)
+void send_datagram(int socket, datagram_t * datagram)
 {
-    send(socket, &datagram, sizeof(datagram_t), 0);
+    printf("%d\n", datagram->transaction);
+    char* serial = serialize(datagram);
+    send(socket, serial, sizeof(serial), 0);
 }
 
 void send_file(int socket, char* project_name, char* file_path, 
                transaction_t transaction, unsigned int version,
                char* user_name)
 {
-	datagram_t **data = prepare_file(project_name, file_path, transaction, version, user_name);
+    datagram_t **data = prepare_file(project_name, file_path, transaction, version, user_name);
 	int i;
-	for (i = 0; i < sizeof(data); ++i)
+	int max = sizeof(data) / sizeof(datagram_t*);
+	printf("%d\n", max);
+	for (i = 0; i < max; ++i)
 	{
 		send_datagram(socket, data[i]);
 	}

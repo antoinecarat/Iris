@@ -50,7 +50,7 @@ void receive_data();
  * @param socket Socket where to send
  * @param datagram Datagram to be sent
 */
-void send_datagram(int socket, char * datagram);
+void send_datagram(int socket, datagram_t * datagram);
 
 
 /**
