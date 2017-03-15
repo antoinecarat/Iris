@@ -143,7 +143,7 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 void rebuild_file(char* project_name, char* file_path, datagram_t** tab) 
 {
 	FILE* file;
-	file = fopen(file_path, "wb+");
+	file = fopen(file_path, "w+");
 	unsigned int i = 0;
   	for(i=0; tab[i] != NULL; ++i) {
     	fwrite(tab[i]->data, tab[i]->data_length, 1, file);

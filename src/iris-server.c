@@ -27,9 +27,9 @@ void create_project(char* project_name)
     create_dir(path);
     //Add project_name to .projects
     FILE * file;
-    file = fopen("iris-server/.project", "a");
+    file = fopen("iris-server/.projects", "a");
     strcat(project_name, "\n");
-    fwrite(project_name, sizeof(project_name)+2, 1, file);
+    fwrite(project_name, strlen(project_name), 1, file);
     fclose(file);
 }
 
@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
         } else if (strcmp(command, "listen") == 0)
         {
             FILE* file;
-            if ((file = fopen("iris-server/.project", "r")) == NULL) //Architecture established ?
+            if ((file = fopen("iris-server/.projects", "r")) == NULL) //Architecture established ?
             {
                 init();
             } else {

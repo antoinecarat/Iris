@@ -27,6 +27,30 @@ void init()
 void clone(char* project_name, char* server_adress, unsigned int server_port)
 {
     int server_socket = connect_to_server(server_adress, server_port);
+    FILE* file;
+    if ((file = fopen("iris/.projects", "r")) == NULL) //Architecture established ?
+    {
+        init();
+    } else {
+        fclose(file);
+    }
+    file = fopen("iris/.projects", "a");
+    char * project_name_bis;
+    strcpy(project_name_bis, project_name);
+    strcat(project_name_bis, "\n");
+    fwrite(project_name_bis, strlen(project_name), 1, file);
+    fclose(file);
+    char * path = "iris/projects/";
+    strcat(path, project_name);
+    create_dir(path);
+    
+    datagram_t *datagram = malloc(sizeof(datagram_t));
+    datagram->transaction = CLONE;
+    datagram->project_name = project_name;
+    datagram->file_path = file_path;
+
+    send_datagram(server_socket, datagram);
+    receive_data();
 }
 
 void create(char* project_name, char* server_adress, unsigned int server_port)
@@ -171,8 +195,64 @@ void print_help(){
 
 int main(int argc, char **argv)
 {
-    //SEE: memset
     char* command = argv[1];
+
+    if (argc == 2)
+    {
+        if (strcmp(command, "help") == 0)
+        {
+            print_help();
+        } else if (strcmp(command, "init") == 0)
+        {
+            init();
+        }
+    } else if (argc == 4)
+    {
+        if (strcmp(command, "add") == 0)
+        {
+            
+        } else if (strcmp(command, "mod") == 0)
+        {
+            
+        } else if (strcmp(command, "del") == 0)
+        {
+            
+        }
+    } else if (argc == 6)
+    {
+        if (strcmp(command, "create") == 0)
+        {
+            
+        } else if (strcmp(command, "clone") == 0)
+        {
+            
+        } else if (strcmp(command, "pull") == 0)
+        {
+            
+        } else if (strcmp(command, "push") == 0)
+        {
+            
+        }
+    }  else if (argc == 7)
+    {
+        if (strcmp(command, "rebase") == 0)
+        {
+            
+        }
+    }
+    } else {
+        perror("Usage : iris <command> <args>.\n");
+        perror("Enter iris help to know more.\n");
+        exit(1);
+    }
+
+
+
+
+
+
+    //--------------
+
     if (argc == 2)
     {
         if (strcmp(command, "help") == 0)
