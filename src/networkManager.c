@@ -10,11 +10,11 @@
 
 #include "networkManager.h"
 
-#define STRINGSIZE 256
+#define STRINGSIZE 128
 
 int connect_to_server(char* name, unsigned int port) 
 {
-	int server_socket; 
+    int server_socket; 
     sockaddr_in local_adress;
     hostent* ptr_host;
 
@@ -88,9 +88,10 @@ void receive_data()
 
 void send_datagram(int socket, datagram_t * datagram)
 {
-    printf("%d\n", datagram->transaction);
     char* serial = serialize(datagram);
-    send(socket, serial, sizeof(serial), 0);
+    printf("Send: %s\n", serial);
+    unsigned int size = strlen(serial) * sizeof(char);
+    send(socket, serial, size, 0);
 }
 
 void send_file(int socket, char* project_name, char* file_path, 
@@ -99,9 +100,7 @@ void send_file(int socket, char* project_name, char* file_path,
 {
     datagram_t **data = prepare_file(project_name, file_path, transaction, version, user_name);
 	int i;
-	int max = sizeof(data) / sizeof(datagram_t*);
-	printf("%d\n", max);
-	for (i = 0; i < max; ++i)
+	for (i = 0; i < data[0]->datagram_total; ++i)
 	{
 		send_datagram(socket, data[i]);
 	}

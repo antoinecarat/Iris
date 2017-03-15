@@ -11,7 +11,8 @@
 #include <libgen.h>
 
 #define DATASIZE 256
-#define STRINGSIZE 256
+#define STRINGSIZE 128
+#define DATAGRAMSIZE 517
 
 /**
  * @enum    transaction_e
@@ -48,15 +49,15 @@ typedef enum transaction_e transaction_t;
 struct datagram_st {
   // infos
   transaction_t transaction;
-  char project_name[STRINGSIZE];
-  char user_name[STRINGSIZE];
+  char *project_name;
+  char *user_name;
   unsigned int version;
-  char file_path[STRINGSIZE];
+  char *file_path;
   // data
   unsigned int datagram_number;
   unsigned int datagram_total;
   unsigned int data_length;
-  char data[DATASIZE];
+  char *data;
 };
 
 typedef struct datagram_st datagram_t;

@@ -1,5 +1,5 @@
 CC := gcc # This is the main compiler
-CFLAGS := -Wall -pthread -g
+CFLAGS := -std=gnu99 -Wall -pthread -g #-Wwrite-strings
 
 SRCDIR := src
 BUILDDIR := build

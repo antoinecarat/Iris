@@ -46,12 +46,12 @@ void push(char* project_name, char* user_name, char* server_adress, unsigned int
 
 void add(char* project_name, char* file_path)
 {
-    char* path;
+    char* path = malloc(STRINGSIZE);
     strcpy(path, "iris/");
     strcat(path, project_name);
     strcat(path, "/added");
     FILE * file;
-    if (file = fopen(path, "a") == NULL)
+    if ((file = fopen(path, "a")) == NULL)
     {
         char* msg = "Error: \" ";
         strcat(msg, project_name);
@@ -67,12 +67,12 @@ void add(char* project_name, char* file_path)
 
 void mod(char* project_name, char* file_path)
 {
-    char* path;
+    char* path = malloc(STRINGSIZE);
     strcpy(path, "iris/");
     strcat(path, project_name);
     strcat(path, "/modified");
     FILE * file;
-    if (file = fopen(path, "a") == NULL)
+    if ((file = fopen(path, "a")) == NULL)
     {
         char* msg = "Error: \" ";
         strcat(msg, project_name);
@@ -88,12 +88,12 @@ void mod(char* project_name, char* file_path)
 
 void del(char* project_name, char* file_path)
 {
-    char* path;
+    char* path = malloc(STRINGSIZE);
     strcpy(path, "iris/");
     strcat(path, project_name);
     strcat(path, "/removed");
     FILE * file;
-    if (file = fopen(path, "a") == NULL)
+    if ((file = fopen(path, "a")) == NULL)
     {
         char* msg = "Error: \" ";
         strcat(msg, project_name);
@@ -113,8 +113,8 @@ void status(char* project_name)
 
     FILE *file;
     int i = 0;
-    char *path;
-    char *status;
+    char *path = malloc(STRINGSIZE);
+    char *status = malloc(10*DATASIZE);
 
     for (i = 0; i < 3; ++i)
     {
@@ -171,7 +171,7 @@ void print_help(){
 
 int main(int argc, char **argv)
 {
-
+    //SEE: memset
     char* command = argv[1];
     if (argc == 2)
     {
@@ -198,15 +198,14 @@ int main(int argc, char **argv)
             server_port = argv[4];
             pull(project_name, server_adress, atoi(server_port));
         } else if (strcmp(command, "push") == 0)
-        {            
+        {
             char* user_name = argv[3];
             server_adress = argv[4];
             server_port = argv[5];
             push(project_name, user_name, server_adress, atoi(server_port));
             int server_socket = connect_to_server(server_adress, atoi(server_port));
 
-            transaction_t t = PUSH;
-            send_file(server_socket, project_name, "iris/testPush.txt", t , 1, "cara");
+            send_file(server_socket, project_name, "testPush.txt", PUSH , 1, user_name);
         }
     } else if (argc == 4)
     {

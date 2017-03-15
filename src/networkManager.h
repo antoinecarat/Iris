@@ -14,7 +14,7 @@
 #include <string.h>
 #include "fileManager.h"
 
-#define SERVER_PORT 5000
+#define SERVER_PORT 2500
 
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;

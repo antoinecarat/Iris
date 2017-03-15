@@ -11,31 +11,39 @@
 
 #include "fileManager.h"
 
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 char* serialize(datagram_t* datagram)
 {
-	char* res = malloc(9 * DATASIZE);
-	char* tmp = malloc(DATASIZE);
+	char* res = malloc(12 * sizeof(char) + strlen(datagram->project_name)
+										 + strlen(datagram->user_name)
+										 + strlen(datagram->file_path)
+										 + strlen(datagram->data));
+	char* tmp = malloc(3 * sizeof(char));
+	
+
+
 	sprintf(tmp, "%d", datagram->transaction);
 	strcpy(res, tmp);
-	strcat(res, "£");
+	strcat(res, "¤");
 	strcat(res, datagram->project_name);
-	strcat(res, "£");
+	strcat(res, "¤");
 	strcat(res, datagram->user_name);
-	strcat(res, "£");
+	strcat(res, "¤");
 	sprintf(tmp, "%d", datagram->version);
 	strcat(res, tmp);
-	strcat(res, "£");
+	strcat(res, "¤");
 	strcat(res, datagram->file_path);
-	strcat(res, "£");
+	strcat(res, "¤");
 	sprintf(tmp, "%d", datagram->datagram_number);
 	strcat(res, tmp);
-	strcat(res, "£");
+	strcat(res, "¤");
 	sprintf(tmp, "%d", datagram->datagram_total);
 	strcat(res, tmp);
-	strcat(res, "£");
+	strcat(res, "¤");
 	sprintf(tmp, "%d", datagram->data_length);
 	strcat(res, tmp);
-	strcat(res, "£");
+	strcat(res, "¤");
 	strcat(res, datagram->data);
 
 	return res;
@@ -43,30 +51,30 @@ char* serialize(datagram_t* datagram)
 
 datagram_t* unserialize(char * serial)
 {
-	printf("Received a datagram :\n");
-	char ** tab = malloc(9 * DATASIZE);
-	char * item = strtok (serial,"£");
-	unsigned int i = 0;
+	char * tab[9];
 
-  	while (item != NULL && i<10)
+	char * item = strtok(serial,"¤");
+	unsigned int i = 0;
+  	while (item != NULL)
   	{
-  		tab[i] = malloc(DATASIZE);
+  		tab[i] = malloc(strlen(item));
   		tab[i] = item;
-    	item = strtok (NULL, "£");	
+    	item = strtok(NULL, "¤");
     	++i;
  	}
 
-	datagram_t* datagram = malloc(sizeof(datagram_t));
+ 	datagram_t* datagram = malloc(sizeof(datagram_t));
+ 	printf("Hello\n");
+	datagram->project_name = malloc(strlen(tab[1]));
+	datagram->user_name = malloc(strlen(tab[2]));
+	datagram->file_path = malloc(strlen(tab[4]));
+	datagram->data = malloc(strlen(tab[8]));
+
 	datagram->transaction = atoi(tab[0]);
-	printf("Transaction: %d\n", datagram->transaction);
 	strcpy(datagram->project_name,tab[1]);
-	printf("Project: %s\n", datagram->project_name);
 	strcpy(datagram->user_name,tab[2]);
-	printf("User: %s\n", datagram->user_name);
 	datagram->version = atoi(tab[3]);
-	printf("Version: %d\n", datagram->version);
 	strcpy(datagram->file_path,tab[4]);
-	printf("File: %s\n", datagram->file_path);
 	datagram->datagram_number = atoi(tab[5]);
 	datagram->datagram_total = atoi(tab[6]);
 	datagram->data_length = atoi(tab[7]);
@@ -87,30 +95,44 @@ datagram_t **prepare_file(char* project_name, char* file_path,
     } else
     {
     	fseek(file, 0L, SEEK_END);
-		unsigned int nb_datagrams = (ftell(file) / DATASIZE) + 1;
-		printf("%d Datagrams\n", nb_datagrams);
+    	unsigned int file_size = ftell(file);
+		unsigned int nb_datagrams = (file_size / DATASIZE) + 1;
+		unsigned int already_read=0;
 		rewind(file);
 		unsigned int i;
-		data_tab = malloc(nb_datagrams * sizeof(datagram_t*));
+		data_tab = malloc(nb_datagrams * sizeof(datagram_t));
+		printf("%d datagrams needed\n", nb_datagrams);
 		for (i=0; i<nb_datagrams; ++i)
 		{
-			printf("Loop %d\n", i);
-		    data_tab[i] = malloc(sizeof(datagram_t*));
-			fread(data_tab[i]->data, sizeof(data_tab[i]->data), 1, file);
-			printf("Content: %s\n", data_tab[i]->data);
-		    data_tab[i]->transaction = transaction;
-		    printf("Transaction: %d\n", data_tab[i]->transaction);
-		    strcpy(data_tab[i]->project_name, project_name);
-		    printf("Project: %s\n", data_tab[i]->project_name);
+			unsigned int mini = MIN(DATASIZE, file_size - already_read);
+			
+			data_tab[i] = malloc(sizeof(datagram_t));
+			data_tab[i]->project_name = malloc(strlen(project_name));
+			data_tab[i]->user_name = malloc(strlen(user_name));
+			data_tab[i]->file_path = malloc(strlen(file_path));
+			data_tab[i]->data = malloc(mini);
+			
+			fread(data_tab[i]->data, mini, 1, file);
+			
+			data_tab[i]->transaction = transaction;
+			
+			strcpy(data_tab[i]->project_name, project_name);
+			
 		    strcpy(data_tab[i]->user_name, user_name);
-		    printf("User: %s\n", data_tab[i]->user_name);
+			
 		    data_tab[i]->version = version;
-		    printf("Version: %d\n", data_tab[i]->version);
-		    strcpy(data_tab[i]->file_path, basename(file_path));		    
-		    printf("File: %s\n", data_tab[i]->file_path);
+			
+		    strcpy(data_tab[i]->file_path, file_path);
+			
 		    data_tab[i]->datagram_number = i;
-		    int read_bytes = (ftell(file) - (i*sizeof(data_tab[i]->data)));
+			
+		    data_tab[i]->datagram_total = nb_datagrams;
+			
+		    int read_bytes = (ftell(file) - (i*DATASIZE));
+		    already_read += read_bytes;
 		    data_tab[i]->data_length = read_bytes;
+			
+			printf("[%d] Data:%s\n", i, data_tab[i]->data);
 		}
         fclose(file);
     }
@@ -124,8 +146,7 @@ void rebuild_file(char* project_name, char* file_path, datagram_t** tab)
 	file = fopen(file_path, "wb+");
 	unsigned int i = 0;
   	for(i=0; tab[i] != NULL; ++i) {
-    	fwrite(tab[i]->data,
-    	tab[i]->data_length, 1, file);
+    	fwrite(tab[i]->data, tab[i]->data_length, 1, file);
   	}
 }
 

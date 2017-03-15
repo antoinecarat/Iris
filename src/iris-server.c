@@ -21,7 +21,7 @@ void init()
 
 void create_project(char* project_name)
 {
-    char* path;
+    char* path = malloc(DATASIZE);
     strcpy(path, "iris-server/projects/");
     strcat(path, project_name);
     create_dir(path);
@@ -44,7 +44,7 @@ void wait_for_client()
     for(;;) {
         current_adress_size = sizeof(current_client_adress);
 
-        if ((client_socket_descriptor = accept(socket_descriptor, (sockaddr*)(&current_client_adress), &current_adress_size)) < 0) {
+        if ((client_socket_descriptor = accept(socket_descriptor, (sockaddr*)(&current_client_adress), (socklen_t*)(&current_adress_size))) < 0) {
             perror("Error: Cannot accept client connection.");
         }
 
@@ -59,7 +59,6 @@ void wait_for_client()
 
 void *thread_client(void *arg)
 {
-    printf("Receiving a request...\n");
     treat((int) arg);
     close((int) arg);
 
@@ -68,11 +67,22 @@ void *thread_client(void *arg)
 
 void treat(int client_socket)
 {
-    char* serial = malloc(9 * DATASIZE);
-
-    if(recv(client_socket, serial, 9 * DATASIZE, 0) > 0) {
+    char* serial = malloc(12 * sizeof(char) + 4*DATASIZE);
+    
+    while(recv(client_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0) {
+        //printf("Received: %s\n", serial);
+        printf("Hello.\n");
         datagram_t * datagram = unserialize(serial);
-        printf("%d\n", datagram->transaction);
+        printf("Is.\n");
+        FILE* file;
+        char * file_path = malloc(DATASIZE);
+        printf("It.\n");
+        strcpy(file_path,"iris-server/");
+        printf("Me.\n");
+        strcat(file_path, datagram->file_path);
+        printf("You're.\n");
+        file = fopen(file_path, "a");
+        printf("Looking for?\n");
         switch(datagram->transaction) {
           case PULL:
             printf("Pull request...\n");
@@ -82,6 +92,10 @@ void treat(int client_socket)
           case PUSH:
             //TODO: Use mutex to avoid collisions between several clients.
             printf("Push request...\n");
+            char * real_data = malloc(datagram->data_length);
+            memcpy(real_data, datagram->data, datagram->data_length);
+            printf("Data: %s\n", real_data);
+            fwrite(datagram->data, datagram->data_length, 1, file);
             //Create a new dir (version+1)
             //Receive whole repo into it
            break;
@@ -123,6 +137,7 @@ int main(int argc, char **argv) {
             if ((file = fopen("iris-server/.project", "r")) == NULL) //Architecture established ?
             {
                 init();
+            } else {
                 fclose(file);
             }
             wait_for_client();
@@ -140,41 +155,3 @@ int main(int argc, char **argv) {
     }
     exit(0);
 }
-
-
-/*------------------------------------------------------*/
-void renvoi (int sock) {
-    char buffer[256];
-    char answer[256] = "KO";
-    int longueur;
-
-    FILE * file;
-    if((file = fopen("test.txt","w+")) != NULL)
-    {
-        read(sock, buffer, sizeof(buffer));
-        printf("lu : %s", buffer);
-        //fwrite(buffer, 1, strlen(buffer), file);
-    } else
-    {
-        perror("Cannot open file");
-    }
-    //if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0) 
-    //    return;
-    printf("\n");
-    if (strcmp(buffer, "pull") == 0){
-        strcpy(answer,"OK");
-        //send
-    } else if (strcmp(buffer, "push") == 0){
-        strcpy(answer,"OK");
-        write(sock,answer,strlen(answer)+1);    
-        sleep(6);
-        read(sock, buffer, sizeof(buffer));
-        printf("lu2 : %s", buffer);
-        //ready to receive
-    } else {
-        strcpy(answer,"Otherwise");
-    }
-    /* mise en attente du programme pour simuler un delai de transmission */
-    sleep(3);
-}
-/*------------------------------------------------------*/
