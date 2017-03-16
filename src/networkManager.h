@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
+#include <dirent.h>
 #include "fileManager.h"
 
 #define SERVER_PORT 2500
@@ -20,6 +21,7 @@ typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
+typedef struct dirent dirent;
 
 
 /**
@@ -68,15 +70,16 @@ void send_file(int socket, char* project_name, char* file_path,
                char* user_name);
 
 /**
- * @brief Send a directory 
+ * @brief Send the content of a directory 
  *
+ * @param socket Socket where to send
  * @param project_name Name of the project. pouet
  * @param file_dir Path of the directory to be send. prout/file.truc
  * @param transaction Transaction type.
  * @param version Version of the project.
  * @param user_name Name of the user. 
 */ 
-void send_dir(char* project_name, char* dir_path, 
+void send_dir(int socket, char* project_name, char* dir_path, 
               transaction_t transaction, unsigned int version,
               char* user_name);
 

@@ -27,8 +27,9 @@ void init();
  * @param project_name Name of the project
  * @param server_adress Name of the server
  * @param server_port Port of the server
+ * @param user_name Name of the user
 */
-void clone(char* project_name, char* server_adress, unsigned int server_port);
+void clone(char* project_name, char* server_adress, unsigned int server_port, char * user_name);
 
 /**
  * @brief Ask to create a project on server.
@@ -36,27 +37,40 @@ void clone(char* project_name, char* server_adress, unsigned int server_port);
  * @param project_name Name of the project
  * @param server_adress Name of the server
  * @param server_port Port of the server
-*/
-void create(char* project_name, char* server_adress, unsigned int server_port);
-
-/**
- * @brief Retrieving data from remote repository.
- * 
- * @param project_name Name of the project
- * @param server_adress Name of the server
- * @param server_port Port of the server
-*/
-void pull(char* project_name, char* server_adress, unsigned int server_port);
-
-/**
- * @brief Retrieving data from remote repository.
- * 
- * @param project_name Name of the project
  * @param user_name Name of the user
+*/
+void create(char* project_name, char* server_adress, unsigned int server_port, char * user_name);
+
+/**
+ * @brief Retrieving data from remote repository.
+ * 
+ * @param project_name Name of the project
  * @param server_adress Name of the server
  * @param server_port Port of the server
 */
-void push(char* project_name, char* user_name, char* server_adress, unsigned int server_port);
+void pull(char* project_name, char* server_adress, unsigned int server_port, char * user_name);
+
+/**
+ * @brief Retrieving data from remote repository.
+ * 
+ * @param project_name Name of the project
+ * @param server_adress Name of the server
+ * @param server_port Port of the server
+ * @param user_name Name of the user
+*/
+void push(char* project_name, char* server_adress, unsigned int server_port, char * user_name);
+
+/**
+ * @brief Retrieving a specific version from remote repository.
+ * 
+ * @param project_name Name of the project
+ * @param version The specific version
+ * @param server_adress Name of the server
+ * @param server_port Port of the server
+ * @param user_name Name of the user
+*/
+void rebase(char* project_name, unsigned int version, char* server_adress, unsigned int server_port, char * user_name);
+
 
 /**
  * @brief Notify that a file has been added.

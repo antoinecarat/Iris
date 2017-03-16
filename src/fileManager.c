@@ -57,14 +57,13 @@ datagram_t* unserialize(char * serial)
 	unsigned int i = 0;
   	while (item != NULL)
   	{
-  		tab[i] = malloc(strlen(item));
+	   	tab[i] = malloc(strlen(item));
   		tab[i] = item;
     	item = strtok(NULL, "¤");
     	++i;
  	}
 
  	datagram_t* datagram = malloc(sizeof(datagram_t));
- 	printf("Hello\n");
 	datagram->project_name = malloc(strlen(tab[1]));
 	datagram->user_name = malloc(strlen(tab[2]));
 	datagram->file_path = malloc(strlen(tab[4]));
@@ -80,6 +79,8 @@ datagram_t* unserialize(char * serial)
 	datagram->data_length = atoi(tab[7]);
 	strcpy(datagram->data,tab[8]);
 
+
+	free(item);
 	return datagram;
 }
 
@@ -101,7 +102,6 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 		rewind(file);
 		unsigned int i;
 		data_tab = malloc(nb_datagrams * sizeof(datagram_t));
-		printf("%d datagrams needed\n", nb_datagrams);
 		for (i=0; i<nb_datagrams; ++i)
 		{
 			unsigned int mini = MIN(DATASIZE, file_size - already_read);
@@ -113,22 +113,15 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 			data_tab[i]->data = malloc(mini);
 			
 			fread(data_tab[i]->data, mini, 1, file);
-			
 			data_tab[i]->transaction = transaction;
-			
 			strcpy(data_tab[i]->project_name, project_name);
-			
 		    strcpy(data_tab[i]->user_name, user_name);
-			
 		    data_tab[i]->version = version;
-			
 		    strcpy(data_tab[i]->file_path, file_path);
-			
-		    data_tab[i]->datagram_number = i;
-			
+		    data_tab[i]->datagram_number = i+1;
 		    data_tab[i]->datagram_total = nb_datagrams;
-			
-		    int read_bytes = (ftell(file) - (i*DATASIZE));
+
+		    int read_bytes = (ftell(file) - already_read);
 		    already_read += read_bytes;
 		    data_tab[i]->data_length = read_bytes;
 			
@@ -136,7 +129,8 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 		}
         fclose(file);
     }
-	return data_tab;
+
+    return data_tab;
 }
 
 
@@ -148,6 +142,12 @@ void rebuild_file(char* project_name, char* file_path, datagram_t** tab)
   	for(i=0; tab[i] != NULL; ++i) {
     	fwrite(tab[i]->data, tab[i]->data_length, 1, file);
   	}
+  	fclose(file);
+}
+
+void free_datagram(datagram_t* datagram)
+{
+  	free(datagram);
 }
 
 void create_dir(char* dir_path)

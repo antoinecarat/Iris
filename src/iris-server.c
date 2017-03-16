@@ -12,10 +12,10 @@
 
 void init()
 {
-    create_dir("iris-server");
-    create_dir("iris-server/projects");
     FILE * file;
     file = fopen("iris-server/.projects", "w+");
+    create_dir("iris-server");
+    create_dir("iris-server/projects");
     fclose(file);
 }
 
@@ -24,13 +24,22 @@ void create_project(char* project_name)
     char* path = malloc(DATASIZE);
     strcpy(path, "iris-server/projects/");
     strcat(path, project_name);
-    create_dir(path);
-    //Add project_name to .projects
-    FILE * file;
-    file = fopen("iris-server/.projects", "a");
-    strcat(project_name, "\n");
-    fwrite(project_name, strlen(project_name), 1, file);
-    fclose(file);
+    
+    DIR *directory;
+
+    if((directory = opendir(path)) == NULL)
+    {
+        create_dir(path);
+        //Add project_name to .projects
+        FILE * file;
+        file = fopen("iris-server/.projects", "a");
+        strcat(project_name, "\n");
+        fwrite(project_name, strlen(project_name), 1, file);
+        fclose(file);
+    } else {
+        closedir(directory);
+    }
+
 }
 
 void wait_for_client()
@@ -48,11 +57,13 @@ void wait_for_client()
             perror("Error: Cannot accept client connection.");
         }
 
-        pthread_t thread1;
+        /*pthread_t thread1;
 
         if(pthread_create(&thread1, NULL, thread_client, (void*)client_socket_descriptor) == -1) {
             perror("Error: Cannot treat client request.");
-        }
+        }*/
+        treat(client_socket_descriptor);
+        close(client_socket_descriptor);
 
     } 
 }
@@ -68,45 +79,87 @@ void *thread_client(void *arg)
 void treat(int client_socket)
 {
     char* serial = malloc(12 * sizeof(char) + 4*DATASIZE);
+    char * current_file = malloc(DATASIZE);
+    datagram_t ** tab = malloc(999*sizeof(datagram_t));
+    unsigned int i = 0;
     
-    while(recv(client_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0) {
+    while(recv(client_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
+    {
         //printf("Received: %s\n", serial);
-        printf("Hello.\n");
         datagram_t * datagram = unserialize(serial);
-        printf("Is.\n");
-        FILE* file;
-        char * file_path = malloc(DATASIZE);
-        printf("It.\n");
-        strcpy(file_path,"iris-server/");
-        printf("Me.\n");
-        strcat(file_path, datagram->file_path);
-        printf("You're.\n");
-        file = fopen(file_path, "a");
-        printf("Looking for?\n");
         switch(datagram->transaction) {
-          case PULL:
-            printf("Pull request...\n");
-            //Construct path and send_dir
-          break;
+            case CLONE:
+                printf("Clone request...\n");
+                break;
+            case CREATE:
+                printf("Create request...\n");
+                printf("%s\n", datagram->file_path);
+                create_project(datagram->project_name);
+                if (datagram->datagram_number == 1)
+                {
+                    i=0;
+                    strcpy(current_file, datagram->file_path);
+                    tab[i] = datagram;
+                } else
+                {
+                    tab[++i] = datagram;
+                    if (datagram->datagram_number == datagram->datagram_total)
+                    {
+                        datagram_t ** final_tab = malloc(i * sizeof(datagram_t));
+                        memcpy(final_tab, tab, i * sizeof(datagram_t));
+                        rebuild_file(datagram->project_name, current_file, final_tab);
+                    }
+                }
+                break;
+            case PULL:
+                printf("Pull request...\n");
+                //Construct path and send_dir
+                break;
 
-          case PUSH:
-            //TODO: Use mutex to avoid collisions between several clients.
-            printf("Push request...\n");
-            char * real_data = malloc(datagram->data_length);
-            memcpy(real_data, datagram->data, datagram->data_length);
-            printf("Data: %s\n", real_data);
-            fwrite(datagram->data, datagram->data_length, 1, file);
-            //Create a new dir (version+1)
-            //Receive whole repo into it
-           break;
+            case PUSH:
+                //TODO: Use mutex to avoid collisions between several clients.
+                printf("Push request...\n");
+                FILE* file;
+                char * file_path = malloc(DATASIZE);
+                strcpy(file_path,"iris-server/");
+                strcat(file_path, datagram->file_path);
+                file = fopen(file_path, "a");
+                char * real_data = malloc(datagram->data_length);
+                memcpy(real_data, datagram->data, datagram->data_length);
+                printf("Data: %s\n", real_data);
+                fwrite(datagram->data, datagram->data_length, 1, file);
+                //Create a new dir (version+1)
+                //Receive whole repo into it
+                break;
 
-          case VERSION:
-            printf("Version request...\n");
-            break;
+            case REBASE:
+                printf("Rebase request...\n");
+                break;
 
-          default:
-            perror("Error: Unknown client request.\n");
-            break;
+            case MKDIR:
+                printf("mkdir request...\n");
+                printf("%s\n", datagram->file_path);
+                char* version = malloc(3);
+                sprintf(version, "%d", datagram->version);
+                char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+                strcpy(real_path, "iris-server/projects/");
+                strcat(real_path, datagram->project_name);
+                strcat(real_path,"/r");
+                strcat(real_path, version);
+                
+                if (strcmp(datagram->file_path, " ") != 0)
+                {
+                    strcat(real_path, "/");
+                    strcat(real_path, datagram->file_path);
+                }
+
+                create_dir(real_path);
+                break;
+
+
+            default:
+                perror("Error: Unknown client request.\n");
+                break;
         }
     }
 }
@@ -133,13 +186,8 @@ int main(int argc, char **argv) {
             init();
         } else if (strcmp(command, "listen") == 0)
         {
-            FILE* file;
-            if ((file = fopen("iris-server/.projects", "r")) == NULL) //Architecture established ?
-            {
-                init();
-            } else {
-                fclose(file);
-            }
+            
+            init();
             wait_for_client();
         }
     } else if (argc == 3 && (strcmp(command, "create") == 0))

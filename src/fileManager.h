@@ -11,8 +11,8 @@
 #include <libgen.h>
 
 #define DATASIZE 256
-#define STRINGSIZE 128
-#define DATAGRAMSIZE 517
+//#define STRINGSIZE 128
+//#define DATAGRAMSIZE 517
 
 /**
  * @enum    transaction_e
@@ -20,14 +20,11 @@
  */
 enum transaction_e {
   CLONE,
-  INIT,
+  CREATE,
   PULL,
   PUSH,
-  MKDIR,  //Create this repository
-  ADD,    //This file has been added
-  DEL,    //This file has been removed
-  MOD,    //This file has been modified
-  VERSION //What is the latest version ?
+  REBASE,
+  MKDIR
 };
 
 typedef enum transaction_e transaction_t;
@@ -105,6 +102,12 @@ datagram_t **prepare_file(char* project_name, char* file_path,
  */
 void rebuild_file(char* project_name, char* file_path, datagram_t** tab);
 
+/**
+ * @brief Free a datagram memory.
+ *
+ * @param datagram datagram.
+ */
+void free_datagram(datagram_t* datagram);
 
 /**
 * @brief Create a directory.
