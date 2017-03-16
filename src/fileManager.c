@@ -90,7 +90,19 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 {
 	FILE* file;
    	datagram_t** data_tab;
-    if ((file = fopen(file_path, "r+")) == NULL)
+
+   	//Construct real path
+   	char * real_path = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
+    //char * real_path = malloc(DATASIZE);
+    strcpy(real_path, "iris/projects/");
+    strcat(real_path, project_name);
+    strcat(real_path, "/");
+	strcat(real_path, file_path);
+
+	printf("Real : %s\n", real_path);
+
+
+    if ((file = fopen(real_path, "r+")) == NULL)
     {
         perror("Error: Cannot open file.");
     } else
@@ -101,16 +113,26 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 		unsigned int already_read=0;
 		rewind(file);
 		unsigned int i;
+
+		
+
 		data_tab = malloc(nb_datagrams * sizeof(datagram_t));
+
 		for (i=0; i<nb_datagrams; ++i)
 		{
 			unsigned int mini = MIN(DATASIZE, file_size - already_read);
+			printf("[%d] Hello.\n", i);
 			
 			data_tab[i] = malloc(sizeof(datagram_t));
-			data_tab[i]->project_name = malloc(strlen(project_name));
-			data_tab[i]->user_name = malloc(strlen(user_name));
-			data_tab[i]->file_path = malloc(strlen(file_path));
-			data_tab[i]->data = malloc(mini);
+			printf("[%d] Hello1.\n", i);
+			data_tab[i]->project_name = malloc(DATASIZE);
+			printf("[%d] Hello2.\n", i);
+			data_tab[i]->user_name = malloc(DATASIZE);
+			printf("[%d] Hello3.\n", i);
+			data_tab[i]->file_path = malloc(DATASIZE);
+			printf("[%d] Hello4.\n", i);
+			data_tab[i]->data = malloc(DATASIZE);
+			printf("[%d] Hello5.\n", i);
 			
 			fread(data_tab[i]->data, mini, 1, file);
 			data_tab[i]->transaction = transaction;
@@ -134,15 +156,40 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 }
 
 
-void rebuild_file(char* project_name, char* file_path, datagram_t** tab) 
+void rebuild_file(char* project_name, char* file_path, unsigned int version, datagram_t** tab) 
 {
+	char * real_path = malloc(DATASIZE);
+	strcpy(real_path, "iris-server/projects/");
+	strcat(real_path, project_name);
+	strcat(real_path, "/r");
+	char* revision = malloc(3);
+    sprintf(revision, "%d", version);
+    strcat(real_path,revision);
+    strcat(real_path,"/");
+	strcat(real_path, file_path);
+	printf("File_path %s, real_path %s\n",file_path, real_path);
 	FILE* file;
-	file = fopen(file_path, "w+");
-	unsigned int i = 0;
-  	for(i=0; tab[i] != NULL; ++i) {
-    	fwrite(tab[i]->data, tab[i]->data_length, 1, file);
-  	}
-  	fclose(file);
+    printf("ICI 1\n");	
+    if ((file = fopen(real_path, "w+")) == NULL)
+    {
+        perror("Error: Cannot create file.");
+    } else {
+		unsigned int i = 0;
+	    printf("ICI 2\n");
+	    file = freopen(real_path,"a+",file);
+	  	for(i=0; tab[i] != NULL; ++i) {
+		    printf(" i : %d\n", i);
+		    printf("data_length: %d\n", tab[i]->data_length);
+		    printf("data : %s, \n",tab[i]->data);
+	    	fwrite(tab[i]->data, tab[i]->data_length, 1, file);
+
+	    	printf("pouet\n");
+	  	}
+	  	fclose(file);    	
+    }
+
+
+
 }
 
 void free_datagram(datagram_t* datagram)

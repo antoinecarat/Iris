@@ -30,6 +30,10 @@ void create_project(char* project_name)
     if((directory = opendir(path)) == NULL)
     {
         create_dir(path);
+        char * r_path = malloc(DATASIZE);
+        strcpy(r_path,path);
+        strcat(r_path,"/r0");
+        create_dir(r_path);
         //Add project_name to .projects
         FILE * file;
         file = fopen("iris-server/.projects", "a");
@@ -57,13 +61,11 @@ void wait_for_client()
             perror("Error: Cannot accept client connection.");
         }
 
-        /*pthread_t thread1;
+        pthread_t thread1;
 
         if(pthread_create(&thread1, NULL, thread_client, (void*)client_socket_descriptor) == -1) {
             perror("Error: Cannot treat client request.");
-        }*/
-        treat(client_socket_descriptor);
-        close(client_socket_descriptor);
+        }
 
     } 
 }
@@ -103,12 +105,12 @@ void treat(int client_socket)
                 } else
                 {
                     tab[++i] = datagram;
-                    if (datagram->datagram_number == datagram->datagram_total)
-                    {
-                        datagram_t ** final_tab = malloc(i * sizeof(datagram_t));
-                        memcpy(final_tab, tab, i * sizeof(datagram_t));
-                        rebuild_file(datagram->project_name, current_file, final_tab);
-                    }
+                }
+                if (datagram->datagram_number == datagram->datagram_total)
+                {
+                    datagram_t ** final_tab = malloc(i * sizeof(datagram_t));
+                    memcpy(final_tab, tab, i * sizeof(datagram_t));
+                    rebuild_file(datagram->project_name, current_file, datagram->version, tab);
                 }
                 break;
             case PULL:
@@ -190,11 +192,6 @@ int main(int argc, char **argv) {
             init();
             wait_for_client();
         }
-    } else if (argc == 3 && (strcmp(command, "create") == 0))
-    {
-        char* project_name = argv[2];
-        strcat(project_name, "\0");
-        create_project(project_name);
     } else
     {
         perror("Usage : iris-server <command> [<args>].\n");

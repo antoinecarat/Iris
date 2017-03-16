@@ -55,6 +55,7 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     datagram->data = " ";
 
     send_datagram(server_socket, datagram);
+   
     //receive all the files.
 
     free(project_name_bis);
@@ -130,7 +131,7 @@ void add(char* project_name, char* file_path)
     if ((file = fopen(path, "a")) == NULL)
     {
         char * msg = malloc(strlen(project_name) + 61);
-        strcpy(msg, "Error: \" ");
+        strcpy(msg, "Error: \"");
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
         perror(msg);
@@ -138,7 +139,7 @@ void add(char* project_name, char* file_path)
     } else
     {
         strcat(file_path, "\n");
-        fwrite(file_path, sizeof(file_path)+2, 1, file);
+        fwrite(file_path, strlen(file_path), 1, file);
         fclose(file);
     }
 
@@ -148,14 +149,14 @@ void add(char* project_name, char* file_path)
 void mod(char* project_name, char* file_path)
 {
     char* path = malloc(strlen(project_name) + 28);
-    strcpy(path, "iris/");
+    strcpy(path, "iris/projects/");
     strcat(path, project_name);
     strcat(path, "/.iris/modified");
     FILE * file;
     if ((file = fopen(path, "a")) == NULL)
     {
         char * msg = malloc(strlen(project_name) + 61);
-        strcpy(msg, "Error: \" ");
+        strcpy(msg, "Error: \"");
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
         perror(msg);
@@ -163,7 +164,7 @@ void mod(char* project_name, char* file_path)
     } else
     {
         strcat(file_path, "\n");
-        fwrite(file_path, sizeof(file_path)+2, 1, file);
+        fwrite(file_path, strlen(file_path), 1, file);
         fclose(file);
     }
 
@@ -173,14 +174,14 @@ void mod(char* project_name, char* file_path)
 void del(char* project_name, char* file_path)
 {
     char* path = malloc(strlen(project_name) + 27);
-    strcpy(path, "iris/");
+    strcpy(path, "iris/projects/");
     strcat(path, project_name);
     strcat(path, "/.iris/removed");
     FILE * file;
     if ((file = fopen(path, "a")) == NULL)
     {
         char * msg = malloc(strlen(project_name) + 61);
-        strcpy(msg, "Error: \" ");
+        strcpy(msg, "Error: \"");
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
         perror(msg);
@@ -188,7 +189,7 @@ void del(char* project_name, char* file_path)
     } else
     {
         strcat(file_path, "\n");
-        fwrite(file_path, sizeof(file_path)+2, 1, file);
+        fwrite(file_path, strlen(file_path), 1, file);
         fclose(file);
     }
     
@@ -201,12 +202,12 @@ void status(char* project_name)
 
     FILE *file;
     int i = 0;
-    char *path = malloc(strlen(project_name) + 5);
+    char *path = malloc(strlen(project_name) + 29);
     char *status = malloc(10*DATASIZE);
 
     for (i = 0; i < 3; ++i)
     {
-        strcpy(path,"iris/");
+        strcpy(path,"iris/projects/");
         strcat(path, project_name);
         if (i == 0)
         {
@@ -223,18 +224,11 @@ void status(char* project_name)
 
         if((file = fopen(path,"r+")) != NULL)
         {
-            char c = fgetc(file);
-            if (c != EOF)
-            {
+            char * line = malloc(sizeof(DATASIZE));
+            while (fscanf(file, "%s\n", line) > 0)
+            {   
                 printf("%s\t", status);
-                printf("%c",c);
-                while((c=fgetc(file))!=EOF){
-                    printf("%c",c);
-                    if (c == '\n')
-                    {
-                        printf("%s\t", status);
-                    }
-                }
+                printf("%s\n", line);
             }
             fclose(file);
         } else {
@@ -252,9 +246,9 @@ void status(char* project_name)
 void print_help(){
     printf("Iris is a simple version control system. In this manual you'll find how to use it.\n");
     printf("Usage : iris <command> <args>\n");
-    printf("\t add <file-name> : Notify that a file has been added.\n");
-    printf("\t mod <file-name> : Notify that a file has been modified.\n");    
-    printf("\t del <file-name> : Notify that a file has been deleted.\n");
+    printf("\t add <project_name> <file-name> : Notify that a file has been added to project.\n");
+    printf("\t mod <project_name> <file-name> : Notify that a file has been modified to project.\n");    
+    printf("\t del <project_name> <file-name> : Notify that a file has been deleted to project.\n");
     printf("\t create <project-name> <server-adress> <server-port> <user-name>: Create a new project on server.\n");
     printf("\t clone <project-name> <server-adress> <server-port> <user-name>: Retrieve a project from server for the first time.\n");
     printf("\t pull <project-name> <server-adress> <server-port> <user-name>: Retrieve latest version of the project from the server.\n");
@@ -277,8 +271,16 @@ int main(int argc, char **argv)
         {
             init();
         }
+    } else if (argc == 3)
+    {
+        char * project_name = argv[2];
+        if (strcmp(command, "status") == 0)
+        {
+            status(project_name);
+        }
     } else if (argc == 4)
     {
+
         char * project_name = argv[2];
         char * file_path = argv[3];
 

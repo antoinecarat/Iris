@@ -117,15 +117,17 @@ void send_dir(int socket, char* project_name, char* dir_path,
               transaction_t transaction, unsigned int version,
               char* user_name)
 {
-    char * real_path = malloc(14 + strlen(project_name) + 1 + strlen(dir_path));
+    char * real_path = malloc(16 + strlen(project_name) + strlen(dir_path));
     strcpy(real_path, "iris/projects/");
     strcat(real_path, project_name);
+
     if (strcmp(dir_path, " ") != 0)
     {
         strcat(real_path, "/");
         strcat(real_path, dir_path);
     }
     printf("Sending %s directory.\n", real_path);
+    
     dirent *entry;
     DIR *directory;
 
@@ -144,29 +146,45 @@ void send_dir(int socket, char* project_name, char* dir_path,
                 printf("%s\n", entry->d_name);
                 if(entry->d_type ==  DT_DIR) {
                     printf("Folder!\n");
-
+                    //char * new_dir_path = malloc(strlen(dir_path) + 2 + strlen(entry->d_name));
+                    char * new_dir_path = malloc(DATASIZE);
+                    if (strcmp(dir_path, " ") != 0)
+                    {
+                        strcpy(new_dir_path, dir_path);
+                        strcat(new_dir_path, "/");
+                        strcat(new_dir_path, entry->d_name);
+                    } else {
+                        strcpy(new_dir_path, entry->d_name);
+                    }
+                    printf("New dir_path: %s\n", new_dir_path);
+                    
                     datagram_t *datagram = malloc(sizeof(datagram_t));
                     datagram->transaction = MKDIR;
                     datagram->project_name = project_name;
                     datagram->user_name = user_name;
-                    datagram->file_path = dir_path;
+                    datagram->file_path = new_dir_path;
                     datagram->data = " ";
 
                     send_datagram(socket, datagram);
-                    char * new_dir_path = malloc(strlen(dir_path) + 1 + strlen(entry->d_name));
+                    
 
-                    strcpy(new_dir_path, dir_path);
-                    strcat(new_dir_path,"/");
-                    strcat(new_dir_path, entry->d_name);
                     send_dir(socket, project_name, new_dir_path, transaction, version, user_name);
 
                     free_datagram(datagram);
                 } else if(entry->d_type == DT_REG) {
                     printf("File!\n");
-                    char * file_path = malloc(strlen(dir_path) + 1 + strlen(entry->d_name));
-                    strcpy(file_path, dir_path);
-                    strcat(file_path, "/");
-                    strcat(file_path, entry->d_name);
+                    //char * file_path = malloc(strlen(dir_path) + 1 + strlen(entry->d_name));
+                    char * file_path = malloc(DATASIZE);
+                    
+                    if (strcmp(dir_path, " ") != 0)
+                    {
+                        strcpy(file_path, dir_path);
+                        strcat(file_path, "/");
+                        strcat(file_path, entry->d_name);
+                    } else {
+                        strcpy(file_path, entry->d_name);
+                    }
+
                     printf("file_path: %s\n", file_path);
                     send_file(socket, project_name, file_path, transaction, version, user_name);
 

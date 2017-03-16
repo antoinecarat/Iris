@@ -100,7 +100,7 @@ datagram_t **prepare_file(char* project_name, char* file_path,
  * @param file_path Path of the file to be re-built.
  * @param tab Array of datagrams.
  */
-void rebuild_file(char* project_name, char* file_path, datagram_t** tab);
+void rebuild_file(char* project_name, char* file_path, unsigned int version, datagram_t** tab);
 
 /**
  * @brief Free a datagram memory.
