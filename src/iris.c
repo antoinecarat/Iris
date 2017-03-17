@@ -28,7 +28,16 @@ void create(char* project_name, char* server_adress, unsigned int server_port, c
 {
     int server_socket = connect_to_server(server_adress, server_port);
 
-    send_dir(server_socket, project_name, " ", CREATE, 0, user_name);
+    datagram_t *datagram = malloc(sizeof(datagram_t));
+    datagram->transaction = CREATE;
+    datagram->project_name = project_name;
+    datagram->user_name = user_name;
+    datagram->file_path = " ";
+    datagram->data = " ";
+
+    send_datagram(server_socket, datagram);
+
+    send_dir(server_socket, project_name, " ", CREATE, 0, user_name, 0);
 }
 
 void clone(char* project_name, char* server_adress, unsigned int server_port, char* user_name)
@@ -86,15 +95,20 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
 
 void push(char* project_name, char* server_adress, unsigned int server_port, char* user_name)
 {
+    int version = 2; // FIXME retrouver la derniere version et ajouté 1 
     int server_socket = connect_to_server(server_adress, server_port);
 
-    char * path = malloc(strlen(project_name) + 14);
-    strcpy(path, "iris/projects/");
-    strcat(path, project_name);
- 
-    //send_dir(path).
+    datagram_t *datagram = malloc(sizeof(datagram_t));
+    datagram->transaction = PUSH;
+    datagram->project_name = project_name;
+    datagram->user_name = user_name;
+    datagram->file_path = " ";
+    datagram->data = " ";
+    datagram->version = version;
+    
+    send_datagram(server_socket, datagram);
 
-    free(path);
+    send_dir(server_socket, project_name, " ", PUSH, version, user_name, 0);
 }
 
 void rebase(char* project_name, unsigned int version, char* server_adress, unsigned int server_port, char* user_name)
@@ -317,8 +331,6 @@ int main(int argc, char **argv)
         } else if (strcmp(command, "push") == 0)
         {
             push(project_name, server_adress, atoi(server_port), user_name);
-            int server_socket = connect_to_server(server_adress, atoi(server_port));
-            send_file(server_socket, project_name, "testPush.txt", PUSH , 1, user_name);
         }
     }  else if (argc == 7)
     {

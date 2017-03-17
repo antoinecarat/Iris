@@ -86,12 +86,13 @@ datagram_t* unserialize(char * serial);
  * @param transaction Transaction type.
  * @param version Version of the project.
  * @param user_name Name of the user.
+ * @param on_server Where the file is rebuilt : 0=client, 1=server.
  *
  * @return An array of datagrams.
  */
 datagram_t **prepare_file(char* project_name, char* file_path, 
                           transaction_t transaction, unsigned int version,
-                          char* user_name);
+                          char* user_name, int on_server);
 
 /**
  * @brief Build a file from an array of datagrams.
@@ -99,8 +100,10 @@ datagram_t **prepare_file(char* project_name, char* file_path,
  * @param project_name Name of the project.
  * @param file_path Path of the file to be re-built.
  * @param tab Array of datagrams.
+ * @param on_server Where the file is rebuilt : 0=client, 1=server.
  */
-void rebuild_file(char* project_name, char* file_path, unsigned int version, datagram_t** tab);
+void rebuild_file(char* project_name, char* file_path, unsigned int version,
+                  datagram_t** tab, int on_server);
 
 /**
  * @brief Free a datagram memory.

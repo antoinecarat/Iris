@@ -51,11 +51,11 @@ char* serialize(datagram_t* datagram)
 
 datagram_t* unserialize(char * serial)
 {
+	printf("Pouet\n");
 	char * tab[9];
-
 	char * item = strtok(serial,"¤");
 	unsigned int i = 0;
-  	while (item != NULL)
+  	while (item != NULL && i < 9)
   	{
 	   	tab[i] = malloc(strlen(item));
   		tab[i] = item;
@@ -80,13 +80,12 @@ datagram_t* unserialize(char * serial)
 	strcpy(datagram->data,tab[8]);
 
 
-	free(item);
 	return datagram;
 }
 
 datagram_t **prepare_file(char* project_name, char* file_path, 
                           transaction_t transaction, unsigned int version,
-	                      char* user_name) 
+	                      char* user_name, int on_server) 
 {
 	FILE* file;
    	datagram_t** data_tab;
@@ -94,10 +93,25 @@ datagram_t **prepare_file(char* project_name, char* file_path,
    	//Construct real path
    	char * real_path = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
     //char * real_path = malloc(DATASIZE);
-    strcpy(real_path, "iris/projects/");
-    strcat(real_path, project_name);
-    strcat(real_path, "/");
-	strcat(real_path, file_path);
+
+   	if (on_server == 0)
+    {
+        printf("Client speaking.\n");
+        strcpy(real_path, "iris/projects/");
+        strcat(real_path, project_name);
+    	strcat(real_path, "/");
+		strcat(real_path, file_path);
+    } else {
+        printf("Server speaking\n");
+        strcpy(real_path, "iris-server/projects/");
+        strcat(real_path, project_name);
+        strcat(real_path, "/r");
+        char* revision = malloc(3);
+        sprintf(revision, "%d", version);
+        strcat(real_path,revision);
+        strcat(real_path,"/");
+		strcat(real_path, file_path);
+    }
 
 	printf("Real : %s\n", real_path);
 
@@ -121,18 +135,12 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 		for (i=0; i<nb_datagrams; ++i)
 		{
 			unsigned int mini = MIN(DATASIZE, file_size - already_read);
-			printf("[%d] Hello.\n", i);
 			
 			data_tab[i] = malloc(sizeof(datagram_t));
-			printf("[%d] Hello1.\n", i);
 			data_tab[i]->project_name = malloc(DATASIZE);
-			printf("[%d] Hello2.\n", i);
 			data_tab[i]->user_name = malloc(DATASIZE);
-			printf("[%d] Hello3.\n", i);
 			data_tab[i]->file_path = malloc(DATASIZE);
-			printf("[%d] Hello4.\n", i);
 			data_tab[i]->data = malloc(DATASIZE);
-			printf("[%d] Hello5.\n", i);
 			
 			fread(data_tab[i]->data, mini, 1, file);
 			data_tab[i]->transaction = transaction;
@@ -156,35 +164,41 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 }
 
 
-void rebuild_file(char* project_name, char* file_path, unsigned int version, datagram_t** tab) 
+void rebuild_file(char* project_name, char* file_path, unsigned int version, datagram_t** tab, int on_server) 
 {
 	char * real_path = malloc(DATASIZE);
-	strcpy(real_path, "iris-server/projects/");
-	strcat(real_path, project_name);
-	strcat(real_path, "/r");
-	char* revision = malloc(3);
-    sprintf(revision, "%d", version);
-    strcat(real_path,revision);
-    strcat(real_path,"/");
-	strcat(real_path, file_path);
-	printf("File_path %s, real_path %s\n",file_path, real_path);
+
+	if (on_server == 0)
+    {
+        printf("Client speaking.\n");
+        strcpy(real_path, "iris/projects/");
+        strcat(real_path, project_name);
+    	strcat(real_path, "/");
+		strcat(real_path, file_path);
+    } else {
+        printf("Server speaking\n");
+        strcpy(real_path, "iris-server/projects/");
+        strcat(real_path, project_name);
+        strcat(real_path, "/r");
+        char* revision = malloc(3);
+        sprintf(revision, "%d", version);
+        strcat(real_path,revision);
+        strcat(real_path,"/");
+		strcat(real_path, file_path);
+    }
+
+	printf("Real_path %s\n", real_path);
 	FILE* file;
-    printf("ICI 1\n");	
+    
     if ((file = fopen(real_path, "w+")) == NULL)
     {
         perror("Error: Cannot create file.");
     } else {
 		unsigned int i = 0;
-	    printf("ICI 2\n");
 	    file = freopen(real_path,"a+",file);
 	  	for(i=0; tab[i] != NULL; ++i) {
-		    printf(" i : %d\n", i);
-		    printf("data_length: %d\n", tab[i]->data_length);
-		    printf("data : %s, \n",tab[i]->data);
-	    	fwrite(tab[i]->data, tab[i]->data_length, 1, file);
-
-	    	printf("pouet\n");
-	  	}
+		   fwrite(tab[i]->data, tab[i]->data_length, 1, file);
+		}
 	  	fclose(file);    	
     }
 
@@ -200,7 +214,8 @@ void free_datagram(datagram_t* datagram)
 void create_dir(char* dir_path)
 {
 	//read/write/search permissions for owner and group, read/search for others. 
-	mkdir(dir_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	int status = mkdir(dir_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	printf("Satus mkdir %s : %d\n", dir_path, status);
 }
 
 void rename_dir(char* dir_path)

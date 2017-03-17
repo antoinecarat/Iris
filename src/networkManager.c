@@ -97,34 +97,53 @@ void send_datagram(int socket, datagram_t * datagram)
 
 void send_file(int socket, char* project_name, char* file_path, 
                transaction_t transaction, unsigned int version,
-               char* user_name)
+               char* user_name, int on_server)
 {
-    datagram_t **data = prepare_file(project_name, file_path, transaction, version, user_name);
+    datagram_t **data = prepare_file(project_name, file_path, transaction, version, user_name, on_server);
 	unsigned int i;
 	for (i = 0; i < data[0]->datagram_total; ++i)
 	{
 		send_datagram(socket, data[i]);
 	}
 
-    unsigned int j=0;
-    for(j=0; data[j] != NULL; ++j) {
-        free_datagram(data[j]);
-    }
-    free(data);
+    // unsigned int j=0;
+    // for(j=0; data[j] != NULL; ++j) {
+    //     free_datagram(data[j]);
+    // }
+    // free(data);
 }
 
 void send_dir(int socket, char* project_name, char* dir_path, 
               transaction_t transaction, unsigned int version,
-              char* user_name)
+              char* user_name, int on_server)
 {
     char * real_path = malloc(16 + strlen(project_name) + strlen(dir_path));
-    strcpy(real_path, "iris/projects/");
-    strcat(real_path, project_name);
-
-    if (strcmp(dir_path, " ") != 0)
+    if (on_server == 0)
     {
-        strcat(real_path, "/");
-        strcat(real_path, dir_path);
+        printf("Client speaking.\n");
+        strcpy(real_path, "iris/projects/");
+        strcat(real_path, project_name);
+
+        if (strcmp(dir_path, " ") != 0)
+        {
+            strcat(real_path, "/");
+            strcat(real_path, dir_path);
+        }
+    } else {
+        printf("Server speaking\n");
+        strcpy(real_path, "iris-server/projects/");
+        strcat(real_path, project_name);
+        strcat(real_path, "/r");
+        char* revision = malloc(3);
+        sprintf(revision, "%d", version);
+        strcat(real_path,revision);
+        strcat(real_path,"/");
+
+        if (strcmp(dir_path, " ") != 0)
+        {
+            strcat(real_path, "/");
+            strcat(real_path, dir_path);
+        }
     }
     printf("Sending %s directory.\n", real_path);
     
@@ -141,7 +160,7 @@ void send_dir(int socket, char* project_name, char* dir_path,
         while((entry = readdir(directory)))
         {
 
-            if(strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..") && strcmp(entry->d_name, ".iris"))
+            if(strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
             {
                 printf("%s\n", entry->d_name);
                 if(entry->d_type ==  DT_DIR) {
@@ -163,14 +182,15 @@ void send_dir(int socket, char* project_name, char* dir_path,
                     datagram->project_name = project_name;
                     datagram->user_name = user_name;
                     datagram->file_path = new_dir_path;
+                    datagram->version = version;
                     datagram->data = " ";
 
                     send_datagram(socket, datagram);
                     
 
-                    send_dir(socket, project_name, new_dir_path, transaction, version, user_name);
+                    send_dir(socket, project_name, new_dir_path, transaction, version, user_name, on_server);
 
-                    free_datagram(datagram);
+                    //free_datagram(datagram);
                 } else if(entry->d_type == DT_REG) {
                     printf("File!\n");
                     //char * file_path = malloc(strlen(dir_path) + 1 + strlen(entry->d_name));
@@ -186,14 +206,10 @@ void send_dir(int socket, char* project_name, char* dir_path,
                     }
 
                     printf("file_path: %s\n", file_path);
-                    send_file(socket, project_name, file_path, transaction, version, user_name);
-
-                    free(file_path);
+                    send_file(socket, project_name, file_path, transaction, version, user_name, on_server);
                 }
             }
         }
         //closedir(directory);
     }
-
-    free(entry);
 }

@@ -63,11 +63,12 @@ void send_datagram(int socket, datagram_t * datagram);
  * @param file_path Path of the file to be send. prout/file.truc
  * @param transaction Transaction type.
  * @param version Version of the project.
- * @param user_name Name of the user. 
+ * @param user_name Name of the user.
+ * @param on_server Where the file is rebuilt : 0=client, 1=server
 */
 void send_file(int socket, char* project_name, char* file_path, 
                transaction_t transaction, unsigned int version,
-               char* user_name);
+               char* user_name, int on_server);
 
 /**
  * @brief Send the content of a directory 
@@ -77,10 +78,11 @@ void send_file(int socket, char* project_name, char* file_path,
  * @param file_dir Path of the directory to be send. prout/file.truc
  * @param transaction Transaction type.
  * @param version Version of the project.
- * @param user_name Name of the user. 
+ * @param user_name Name of the user.
+ * @param on_server Where the file is rebuilt : 0=client, 1=server
 */ 
 void send_dir(int socket, char* project_name, char* dir_path, 
               transaction_t transaction, unsigned int version,
-              char* user_name);
+              char* user_name, int on_server);
 
 #endif //__NETWORKMANAGER_H__

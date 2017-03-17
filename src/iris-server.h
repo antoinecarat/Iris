@@ -21,7 +21,7 @@ void init();
 /**
  * @brief Create new project.
  * 
- * @param projet Name of the project
+ * @param project_name Name of the project
 */
 void create_project(char* project_name);
 

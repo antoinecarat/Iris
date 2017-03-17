@@ -29,17 +29,43 @@ void create_project(char* project_name)
 
     if((directory = opendir(path)) == NULL)
     {
+        //Create project architecture
         create_dir(path);
         char * r_path = malloc(DATASIZE);
         strcpy(r_path,path);
         strcat(r_path,"/r0");
         create_dir(r_path);
+
+        FILE * file_projects;
+
+        // FILE * file_version;
+        // FILE * file_author;
+        // char * version_file = malloc(DATASIZE);
+        // strcpy(version_file, path);
+        // strcat(version_file, "/.version");
+        // file_version = fopen(version_file, "w+");
+        // char * note = malloc(DATASIZE);
+        // strcpy(note, "0\n");
+        // strcat(note, user_name);
+        // fwrite(note, strlen(note), 1, file_version);
+        // fclose(file_version);
+
+        // char * iris_dir = malloc(DATASIZE);
+        // strcpy(iris_dir, r_path);
+        // strcat(iris_dir, "/.iris");
+        // create_dir(iris_dir);
+
+        // char * author_file = malloc(DATASIZE);
+        // strcpy(author_file, iris_dir);
+        // strcat(author_file, "/author");
+        // file = freopen(author_file, "w+", file);
+        // fwrite(user_name, strlen(user_name), 1, file);
+
         //Add project_name to .projects
-        FILE * file;
-        file = fopen("iris-server/.projects", "a");
+        file_projects = fopen("iris-server/.projects", "a");
         strcat(project_name, "\n");
-        fwrite(project_name, strlen(project_name), 1, file);
-        fclose(file);
+        fwrite(project_name, strlen(project_name), 1, file_projects);
+        fclose(file_projects);
     } else {
         closedir(directory);
     }
@@ -88,30 +114,35 @@ void treat(int client_socket)
     while(recv(client_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
     {
         //printf("Received: %s\n", serial);
+        printf("Received something: %s\n", serial);
         datagram_t * datagram = unserialize(serial);
+        printf("Userial\n");
         switch(datagram->transaction) {
             case CLONE:
                 printf("Clone request...\n");
                 break;
             case CREATE:
                 printf("Create request...\n");
-                printf("%s\n", datagram->file_path);
-                create_project(datagram->project_name);
-                if (datagram->datagram_number == 1)
+                if (strcmp(datagram->file_path, " ") == 0)
                 {
-                    i=0;
-                    strcpy(current_file, datagram->file_path);
-                    tab[i] = datagram;
-                } else
+                    create_project(datagram->project_name);
+                } else 
                 {
-                    tab[++i] = datagram;
+                    if (datagram->datagram_number == 1)
+                    {
+                        i=0;
+                        strcpy(current_file, datagram->file_path);
+                        tab[i] = datagram;
+                    } else
+                    {
+                        tab[++i] = datagram;
+                    }
+                    if (datagram->datagram_number == datagram->datagram_total)
+                    {
+                        rebuild_file(datagram->project_name, current_file, datagram->version, tab, 1);
+                    }
                 }
-                if (datagram->datagram_number == datagram->datagram_total)
-                {
-                    datagram_t ** final_tab = malloc(i * sizeof(datagram_t));
-                    memcpy(final_tab, tab, i * sizeof(datagram_t));
-                    rebuild_file(datagram->project_name, current_file, datagram->version, tab);
-                }
+                printf("Request treated with succes.\n");
                 break;
             case PULL:
                 printf("Pull request...\n");
@@ -120,18 +151,36 @@ void treat(int client_socket)
 
             case PUSH:
                 //TODO: Use mutex to avoid collisions between several clients.
+               //TODO: Use mutex to avoid collisions between several clients.
+                //create rN/
                 printf("Push request...\n");
-                FILE* file;
-                char * file_path = malloc(DATASIZE);
-                strcpy(file_path,"iris-server/");
-                strcat(file_path, datagram->file_path);
-                file = fopen(file_path, "a");
-                char * real_data = malloc(datagram->data_length);
-                memcpy(real_data, datagram->data, datagram->data_length);
-                printf("Data: %s\n", real_data);
-                fwrite(datagram->data, datagram->data_length, 1, file);
-                //Create a new dir (version+1)
-                //Receive whole repo into it
+                if (strcmp(datagram->file_path, " ") == 0)
+                {
+                   char* r_path = malloc(DATASIZE);
+                    strcpy(r_path, "iris-server/projects/");
+                    strcat(r_path, datagram->project_name);
+                    strcat(r_path, "/r");
+                    char* revision = malloc(3);
+                    sprintf(revision, "%d", datagram->version);//FIXME see above
+                    strcat(r_path,revision);
+                    create_dir(r_path);//Create rN/                   
+                } else  {
+ 
+                    if (datagram->datagram_number == 1)
+                        {
+                            i=0;
+                            strcpy(current_file, datagram->file_path);
+                            tab[i] = datagram;
+                        } else
+                        {
+                            tab[++i] = datagram;
+                        }
+                        if (datagram->datagram_number == datagram->datagram_total)
+                        {
+                            unsigned int revision = datagram->version;//FIXME: Get latest version in conf file
+                            rebuild_file(datagram->project_name, current_file, revision, tab, 1);
+                        }
+                    }    
                 break;
 
             case REBASE:
@@ -154,7 +203,7 @@ void treat(int client_socket)
                     strcat(real_path, "/");
                     strcat(real_path, datagram->file_path);
                 }
-
+                printf("Real : %s\n", real_path);
                 create_dir(real_path);
                 break;
 
@@ -164,6 +213,8 @@ void treat(int client_socket)
                 break;
         }
     }
+    printf("End of reception\n");
+
 }
 
 void print_help(){
