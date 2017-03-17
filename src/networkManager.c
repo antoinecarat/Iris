@@ -133,11 +133,9 @@ void send_dir(int socket, char* project_name, char* dir_path,
         printf("Server speaking\n");
         strcpy(real_path, "iris-server/projects/");
         strcat(real_path, project_name);
-        strcat(real_path, "/r");
-        char* revision = malloc(3);
-        sprintf(revision, "%d", version);
-        strcat(real_path,revision);
-        strcat(real_path,"/");
+        strcat(real_path, "/r2");
+        //char* revision = malloc(3);
+        //strcat(real_path,revision);
 
         if (strcmp(dir_path, " ") != 0)
         {

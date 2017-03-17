@@ -146,7 +146,8 @@ void treat(int client_socket)
                 break;
             case PULL:
                 printf("Pull request...\n");
-                //Construct path and send_dir
+                unsigned int latest = 2;
+                send_dir(client_socket, datagram->project_name, " ", PULL, latest, datagram->user_name, 1);
                 break;
 
             case PUSH:

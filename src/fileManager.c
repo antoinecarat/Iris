@@ -218,9 +218,29 @@ void create_dir(char* dir_path)
 	printf("Satus mkdir %s : %d\n", dir_path, status);
 }
 
-void rename_dir(char* dir_path)
+void clean_dir(char* dir_path)
 {
+	dirent *entry;
+    DIR *directory;
+    	
+	char * real_path = malloc(DATASIZE);
+	strcpy(real_path, dir_path);
 
+    if((directory = opendir(real_path)) == NULL)
+    {
+        perror("Error: Cannot open \"");
+        perror(real_path);
+        perror("\" directory.");
+        exit(1);
+    } else {
+        while((entry = readdir(directory)))
+        {
+       		strcpy(real_path, dir_path);
+			strcat(real_path, "/");
+			strcat(real_path, entry->d_name);
+        	remove(real_path);
+        }
+    }
 }
 
 void copy_dir(char* dir_path) 

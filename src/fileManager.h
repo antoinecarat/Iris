@@ -8,11 +8,13 @@
 #define __FILEMANAGER_H__
 
 #include <sys/stat.h>
-#include <libgen.h>
+#include <dirent.h>
 
 #define DATASIZE 256
 //#define STRINGSIZE 128
 //#define DATAGRAMSIZE 517
+
+typedef struct dirent dirent;
 
 /**
  * @enum    transaction_e
@@ -120,11 +122,11 @@ void free_datagram(datagram_t* datagram);
 void create_dir(char* dir_path);
 
 /**
-* @brief Rename a directory.
+* @brief Remove the content of a directory.
 *
 * @param dir_path Name of the directory to be renamed. 
 */
-void rename_dir(char* dir_path);
+void clean_dir(char* dir_path);
 
 /**
 * @brief Copy a directory.
