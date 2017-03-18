@@ -51,7 +51,6 @@ char* serialize(datagram_t* datagram)
 
 datagram_t* unserialize(char * serial)
 {
-	printf("Pouet\n");
 	char * tab[9];
 	char * item = strtok(serial,"¤");
 	unsigned int i = 0;
@@ -96,13 +95,11 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 
    	if (on_server == 0)
     {
-        printf("Client speaking.\n");
         strcpy(real_path, "iris/projects/");
         strcat(real_path, project_name);
     	strcat(real_path, "/");
 		strcat(real_path, file_path);
     } else {
-        printf("Server speaking\n");
         strcpy(real_path, "iris-server/projects/");
         strcat(real_path, project_name);
         strcat(real_path, "/r");
@@ -113,7 +110,7 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 		strcat(real_path, file_path);
     }
 
-	printf("Real : %s\n", real_path);
+	printf(">> Preparing file for sending: %s\n", real_path);
 
 
     if ((file = fopen(real_path, "r+")) == NULL)
@@ -127,8 +124,6 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 		unsigned int already_read=0;
 		rewind(file);
 		unsigned int i;
-
-		
 
 		data_tab = malloc(nb_datagrams * sizeof(datagram_t));
 
@@ -170,13 +165,11 @@ void rebuild_file(char* project_name, char* file_path, unsigned int version, dat
 
 	if (on_server == 0)
     {
-        printf("Client speaking.\n");
         strcpy(real_path, "iris/projects/");
         strcat(real_path, project_name);
     	strcat(real_path, "/");
 		strcat(real_path, file_path);
     } else {
-        printf("Server speaking\n");
         strcpy(real_path, "iris-server/projects/");
         strcat(real_path, project_name);
         strcat(real_path, "/r");
@@ -187,7 +180,7 @@ void rebuild_file(char* project_name, char* file_path, unsigned int version, dat
 		strcat(real_path, file_path);
     }
 
-	printf("Real_path %s\n", real_path);
+	printf(">> Rebuilding file from dtagrams: %s\n", real_path);
 	FILE* file;
     
     if ((file = fopen(real_path, "w+")) == NULL)
@@ -208,14 +201,14 @@ void rebuild_file(char* project_name, char* file_path, unsigned int version, dat
 
 void free_datagram(datagram_t* datagram)
 {
-  	free(datagram);
+  	//free(datagram);
 }
 
 void create_dir(char* dir_path)
 {
 	//read/write/search permissions for owner and group, read/search for others. 
 	int status = mkdir(dir_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	printf("Satus mkdir %s : %d\n", dir_path, status);
+	printf(">> MKDIR %s : %d\n", dir_path, status);
 }
 
 void clean_dir(char* dir_path)
@@ -226,21 +219,23 @@ void clean_dir(char* dir_path)
 	char * real_path = malloc(DATASIZE);
 	strcpy(real_path, dir_path);
 
-    if((directory = opendir(real_path)) == NULL)
-    {
-        perror("Error: Cannot open \"");
-        perror(real_path);
-        perror("\" directory.");
-        exit(1);
-    } else {
-        while((entry = readdir(directory)))
-        {
-       		strcpy(real_path, dir_path);
-			strcat(real_path, "/");
-			strcat(real_path, entry->d_name);
-        	remove(real_path);
-        }
-    }
+	printf(">> Cleaning directory: %s\n", real_path);
+
+   //  if((directory = opendir(real_path)) == NULL)
+   //  {
+   //      perror("Error: Cannot open \"");
+   //      perror(real_path);
+   //      perror("\" directory.");
+   //      exit(1);
+   //  } else {
+   //      while((entry = readdir(directory)))
+   //      {
+   //     		strcpy(real_path, dir_path);
+			// strcat(real_path, "/");
+			// strcat(real_path, entry->d_name);
+   //      	remove(real_path);
+   //      }
+   //  }
 }
 
 void copy_dir(char* dir_path) 

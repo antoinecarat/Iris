@@ -19,7 +19,46 @@ void init()
     fclose(file);
 }
 
-void create_project(char* project_name)
+
+unsigned int get_latest(char * project_name)
+{
+    char* path = malloc(DATASIZE);
+    strcpy(path, "iris-server/projects/");
+    strcat(path, project_name);
+    
+    FILE * file_version;
+    char * version_file = malloc(DATASIZE);
+    strcpy(version_file, path);
+    strcat(version_file, "/.version");
+    file_version = fopen(version_file, "r+");
+    int ver;
+    fscanf(file_version, "%d", &ver);
+
+    return ver;
+}
+
+void update_version(char * project_name, unsigned int version, char * user_name)
+{
+    char* path = malloc(DATASIZE);
+    strcpy(path, "iris-server/projects/");
+    strcat(path, project_name);
+
+    FILE * file_version;
+    char * version_file = malloc(DATASIZE);
+    strcpy(version_file, path);
+    strcat(version_file, "/.version");
+    file_version = fopen(version_file, "w+");
+    char * note = malloc(DATASIZE);
+    char* v = malloc(3);
+    sprintf(v, "%d", version);
+    strcpy(note, v);
+    strcat(note, "\n");
+    strcat(note, user_name);
+    fwrite(note, strlen(note), 1, file_version);
+    fclose(file_version);
+}
+
+void create_project(char* project_name, char * user_name)
 {
     char* path = malloc(DATASIZE);
     strcpy(path, "iris-server/projects/");
@@ -36,20 +75,9 @@ void create_project(char* project_name)
         strcat(r_path,"/r0");
         create_dir(r_path);
 
-        FILE * file_projects;
+        update_version(project_name, 0, user_name);
 
-        // FILE * file_version;
         // FILE * file_author;
-        // char * version_file = malloc(DATASIZE);
-        // strcpy(version_file, path);
-        // strcat(version_file, "/.version");
-        // file_version = fopen(version_file, "w+");
-        // char * note = malloc(DATASIZE);
-        // strcpy(note, "0\n");
-        // strcat(note, user_name);
-        // fwrite(note, strlen(note), 1, file_version);
-        // fclose(file_version);
-
         // char * iris_dir = malloc(DATASIZE);
         // strcpy(iris_dir, r_path);
         // strcat(iris_dir, "/.iris");
@@ -61,7 +89,7 @@ void create_project(char* project_name)
         // file = freopen(author_file, "w+", file);
         // fwrite(user_name, strlen(user_name), 1, file);
 
-        //Add project_name to .projects
+        FILE * file_projects;
         file_projects = fopen("iris-server/.projects", "a");
         strcat(project_name, "\n");
         fwrite(project_name, strlen(project_name), 1, file_projects);
@@ -113,19 +141,16 @@ void treat(int client_socket)
     
     while(recv(client_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
     {
-        //printf("Received: %s\n", serial);
         printf("Received something: %s\n", serial);
         datagram_t * datagram = unserialize(serial);
-        printf("Userial\n");
+        unsigned int latest;
+        
         switch(datagram->transaction) {
-            case CLONE:
-                printf("Clone request...\n");
-                break;
             case CREATE:
                 printf("Create request...\n");
                 if (strcmp(datagram->file_path, " ") == 0)
                 {
-                    create_project(datagram->project_name);
+                    create_project(datagram->project_name, datagram->user_name);
                 } else 
                 {
                     if (datagram->datagram_number == 1)
@@ -139,32 +164,38 @@ void treat(int client_socket)
                     }
                     if (datagram->datagram_number == datagram->datagram_total)
                     {
-                        rebuild_file(datagram->project_name, current_file, datagram->version, tab, 1);
+                        rebuild_file(datagram->project_name, current_file, 0, tab, 1);
                     }
                 }
                 printf("Request treated with succes.\n");
                 break;
+            case CLONE:
             case PULL:
-                printf("Pull request...\n");
-                unsigned int latest = 2;
-                send_dir(client_socket, datagram->project_name, " ", PULL, latest, datagram->user_name, 1);
+                printf("Clone/Pull request...\n");
+
+                //TODO: check if project exists
+                latest = get_latest(datagram->project_name);
+                
+                send_dir(client_socket, datagram->project_name, " ", datagram->transaction, latest, datagram->user_name, 1);
                 break;
 
             case PUSH:
                 //TODO: Use mutex to avoid collisions between several clients.
-               //TODO: Use mutex to avoid collisions between several clients.
-                //create rN/
                 printf("Push request...\n");
+                latest = get_latest(datagram->project_name);
+
                 if (strcmp(datagram->file_path, " ") == 0)
                 {
-                   char* r_path = malloc(DATASIZE);
+                    update_version(datagram->project_name, latest + 1, datagram->user_name);
+                    latest = get_latest(datagram->project_name);
+                    char* r_path = malloc(DATASIZE);
                     strcpy(r_path, "iris-server/projects/");
                     strcat(r_path, datagram->project_name);
                     strcat(r_path, "/r");
                     char* revision = malloc(3);
-                    sprintf(revision, "%d", datagram->version);//FIXME see above
+                    sprintf(revision, "%d", latest);
                     strcat(r_path,revision);
-                    create_dir(r_path);//Create rN/                   
+                    create_dir(r_path);
                 } else  {
  
                     if (datagram->datagram_number == 1)
@@ -178,8 +209,7 @@ void treat(int client_socket)
                         }
                         if (datagram->datagram_number == datagram->datagram_total)
                         {
-                            unsigned int revision = datagram->version;//FIXME: Get latest version in conf file
-                            rebuild_file(datagram->project_name, current_file, revision, tab, 1);
+                            rebuild_file(datagram->project_name, current_file, latest, tab, 1);
                         }
                     }    
                 break;
@@ -189,10 +219,9 @@ void treat(int client_socket)
                 break;
 
             case MKDIR:
-                printf("mkdir request...\n");
-                printf("%s\n", datagram->file_path);
+                printf("Mkdir request...\n");
                 char* version = malloc(3);
-                sprintf(version, "%d", datagram->version);
+                sprintf(version, "%d", latest);
                 char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
                 strcpy(real_path, "iris-server/projects/");
                 strcat(real_path, datagram->project_name);
@@ -204,7 +233,7 @@ void treat(int client_socket)
                     strcat(real_path, "/");
                     strcat(real_path, datagram->file_path);
                 }
-                printf("Real : %s\n", real_path);
+                
                 create_dir(real_path);
                 break;
 
@@ -218,13 +247,51 @@ void treat(int client_socket)
 
 }
 
-void print_help(){
+void print_help()
+{
     printf("Iris is a simple version control system. In this manual you'll find how to use it.\n");
     printf("Usage : iris-server <command> <args>\n");
     printf("\t init : Create whole server architecture.\n");
     printf("\t listen : listen to the network, waiting for client request.\n");
     printf("\t create <project-name> : Create folder and configure project.\n");
     printf("\t help : Show this.\n");
+}
+
+void list_projects()
+{
+    FILE *file;
+    FILE *version_file;
+    char *projects_path = malloc(21);
+    char *version_path = malloc(50);
+    strcpy(projects_path,"iris-server/.projects");
+    strcpy(version_path, "iris-server/projects/");
+
+    printf("Available projects on this server:\n");
+    if((file = fopen(projects_path,"r+")) != NULL)
+    {
+        char * line = malloc(sizeof(DATASIZE));
+        while (fscanf(file, "%s\n", line) > 0)
+        {   
+            //Get version in line/.version file.
+            strcat(version_path, line);
+            strcat(version_path, "/.version");
+            int version;
+            char * user = malloc(20);
+            if((version_file = fopen(version_path,"r+")) != NULL)
+            {
+                fscanf(version_file, "%d\n%s", &version, user);
+                printf("- %s: Latest version : %d by %s.\n", line, version, user);
+            } else
+            {
+                perror("Error : Cannot open .version file");
+                exit(1);
+            }
+        }
+        fclose(file);
+    } else {
+        perror("Error : Cannot open .projects file");
+        exit(1);
+    }
 }
 
 int main(int argc, char **argv) {
@@ -243,6 +310,10 @@ int main(int argc, char **argv) {
             
             init();
             wait_for_client();
+        } else if (strcmp(command, "list-projects") == 0)
+        {
+            
+            list_projects();
         }
     } else
     {

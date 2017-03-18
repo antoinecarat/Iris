@@ -64,11 +64,12 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     datagram->data = " ";
 
     send_datagram(server_socket, datagram);
-   
+
     //receive all the files.
 
-    free(project_name_bis);
-    free(path);
+
+    //free(project_name_bis);
+    //free(path);
 }
 
 void pull(char* project_name, char* server_adress, unsigned int server_port, char* user_name)
@@ -98,11 +99,10 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
     
     while(recv(server_socket, serial, 12 * sizeof(char) + 2*DATASIZE, 0) > 0)
     {
-        //printf("Received: %s\n", serial);
-        printf("Received something: %s\n", serial);
+        printf(">> Receiving: %s\n", serial);
         datagram_t * datagram = unserialize(serial);
-        printf("Userial\n");
-        //TODO add switch
+        if (datagram->transaction == PULL)
+        {
             if (datagram->datagram_number == 1)
             {
                 i=0;
@@ -116,15 +116,25 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
             {
                 rebuild_file(datagram->project_name, current_file, datagram->version, tab, 0);
             }
+        } else if (datagram->transaction == MKDIR)
+        {
+            char* version = malloc(3);
+            char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+            strcpy(real_path, "iris/projects/");
+            strcat(real_path, datagram->project_name);
+            strcat(real_path, "/");
+            strcat(real_path, datagram->file_path);
+            create_dir(real_path);
+        }
     }
 
-    free_datagram(datagram);
-    free(path);
+    //free_datagram(datagram);
+    //free(path);
 }
 
 void push(char* project_name, char* server_adress, unsigned int server_port, char* user_name)
 {
-    int version = 2; // FIXME retrouver la derniere version et ajouté 1 
+    int version = 0;
     int server_socket = connect_to_server(server_adress, server_port);
 
     datagram_t *datagram = malloc(sizeof(datagram_t));
@@ -160,8 +170,8 @@ void rebase(char* project_name, unsigned int version, char* server_adress, unsig
     send_datagram(server_socket, datagram);
     //receive all the files.
 
-    free_datagram(datagram);
-    free(path);
+    //free_datagram(datagram);
+    //free(path);
 }
 
 void add(char* project_name, char* file_path)
@@ -178,7 +188,7 @@ void add(char* project_name, char* file_path)
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
         perror(msg);
-        free(msg);
+        //free(msg);
     } else
     {
         strcat(file_path, "\n");
@@ -186,7 +196,7 @@ void add(char* project_name, char* file_path)
         fclose(file);
     }
 
-    free(path);
+    //free(path);
 }
 
 void mod(char* project_name, char* file_path)
@@ -211,7 +221,7 @@ void mod(char* project_name, char* file_path)
         fclose(file);
     }
 
-    free(path);
+    //free(path);
 }
 
 void del(char* project_name, char* file_path)
@@ -228,7 +238,7 @@ void del(char* project_name, char* file_path)
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
         perror(msg);
-        free(msg);
+        //free(msg);
     } else
     {
         strcat(file_path, "\n");
@@ -236,12 +246,12 @@ void del(char* project_name, char* file_path)
         fclose(file);
     }
     
-    free(path);
+    //free(path);
 }
 
 void status(char* project_name)
 {
-    printf("%s status :\n", project_name);
+    printf(">> Status: %s\n", project_name);
 
     FILE *file;
     int i = 0;
@@ -280,8 +290,8 @@ void status(char* project_name)
         }
     }
     
-    free(path);
-    free(status);
+    //free(path);
+    //free(status);
 }
 
 
