@@ -9,6 +9,7 @@
 
 #include <sys/stat.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #define DATASIZE 256
 //#define STRINGSIZE 128

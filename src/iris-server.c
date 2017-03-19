@@ -177,6 +177,7 @@ void treat(int client_socket)
                 latest = get_latest(datagram->project_name);
                 
                 send_dir(client_socket, datagram->project_name, " ", datagram->transaction, latest, datagram->user_name, 1);
+                close(client_socket);
                 break;
 
             case PUSH:

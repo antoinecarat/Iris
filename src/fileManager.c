@@ -221,21 +221,33 @@ void clean_dir(char* dir_path)
 
 	printf(">> Cleaning directory: %s\n", real_path);
 
-   //  if((directory = opendir(real_path)) == NULL)
-   //  {
-   //      perror("Error: Cannot open \"");
-   //      perror(real_path);
-   //      perror("\" directory.");
-   //      exit(1);
-   //  } else {
-   //      while((entry = readdir(directory)))
-   //      {
-   //     		strcpy(real_path, dir_path);
-			// strcat(real_path, "/");
-			// strcat(real_path, entry->d_name);
-   //      	remove(real_path);
-   //      }
-   //  }
+    if((directory = opendir(real_path)) == NULL)
+    {
+        perror("Error: Cannot open \"");
+        perror(real_path);
+        perror("\" directory.");
+        exit(1);
+    } else {
+        while((entry = readdir(directory)))
+        {
+       		if(strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
+            {
+	       		strcpy(real_path, dir_path);
+				strcat(real_path, "/");
+				strcat(real_path, entry->d_name);
+
+                if(entry->d_type ==  DT_DIR)
+                {
+                	clean_dir(real_path);
+                	rmdir(real_path);
+                } else if(entry->d_type == DT_REG)
+                {
+		        	int ret = remove(real_path);
+		        }
+		    }
+        }
+        closedir(dir_path);
+    }
 }
 
 void copy_dir(char* dir_path) 
