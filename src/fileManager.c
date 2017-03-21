@@ -15,12 +15,13 @@
 
 char* serialize(datagram_t* datagram)
 {
-	char* res = malloc(12 * sizeof(char) + strlen(datagram->project_name)
-										 + strlen(datagram->user_name)
-										 + strlen(datagram->file_path)
-										 + strlen(datagram->data));
-	char* tmp = malloc(3 * sizeof(char));
-	
+	//char* res = malloc(12 * sizeof(char) + strlen(datagram->project_name)
+	//									 + strlen(datagram->user_name)
+	//									 + strlen(datagram->file_path)
+	//									 + strlen(datagram->data));
+	char * res = malloc(12 * sizeof(char) + 4 * DATASIZE);
+	//char* tmp = malloc(3 * sizeof(char));
+	char * tmp = malloc(DATASIZE);
 
 
 	sprintf(tmp, "%d", datagram->transaction);
@@ -114,7 +115,8 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 
 	printf(">> Preparing file for sending: %s\n", real_path);
 
-	char * tmp = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
+	//char * tmp = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
+	char * tmp = malloc(3* DATASIZE);
 	strcpy(tmp,real_path);
 	printf("(tmp) %s\n", tmp);
 

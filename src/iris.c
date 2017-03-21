@@ -45,13 +45,15 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     int server_socket = connect_to_server(server_adress, server_port);
     FILE* file;
     file = fopen("iris/.projects", "a");
-    char * project_name_bis = malloc(strlen(project_name) + 1);
+    //char * project_name_bis = malloc(strlen(project_name) + 1);
+    char * project_name_bis = malloc(DATASIZE);
     strcpy(project_name_bis, project_name);
     strcat(project_name_bis, "\n");
     fwrite(project_name_bis, strlen(project_name), 1, file);
     fclose(file);
 
-    char * path = malloc(strlen(project_name) + 14);
+    //char * path = malloc(strlen(project_name) + 14);
+    char* path = malloc(DATASIZE);
     strcpy(path, "iris/projects/");
     strcat(path, project_name);
     create_dir(path);
@@ -76,7 +78,8 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
 {
     int server_socket = connect_to_server(server_adress, server_port);
 
-    char * path = malloc(strlen(project_name) + 14);
+    //char * path = malloc(strlen(project_name) + 14);
+    char * path = malloc(DATASIZE);
     strcpy(path, "iris/projects/");
     strcat(path, project_name);
     
@@ -119,7 +122,8 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
         } else if (datagram->transaction == MKDIR)
         {
             char* version = malloc(3);
-            char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+            //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+            char * real_path = malloc(DATASIZE);
             strcpy(real_path, "iris/projects/");
             strcat(real_path, datagram->project_name);
             strcat(real_path, "/");
@@ -154,7 +158,8 @@ void rebase(char* project_name, unsigned int version, char* server_adress, unsig
 {
     int server_socket = connect_to_server(server_adress, server_port);
 
-    char * path = malloc(strlen(project_name) + 14);
+    //char * path = malloc(strlen(project_name) + 14);
+    char * path = malloc(DATASIZE);
     strcpy(path, "iris/projects/");
     strcat(path, project_name);
     create_dir(path);
@@ -176,14 +181,16 @@ void rebase(char* project_name, unsigned int version, char* server_adress, unsig
 
 void add(char* project_name, char* file_path)
 {
-    char* path = malloc(strlen(project_name) + 25);
+    //char* path = malloc(strlen(project_name) + 25);
+    char* path = malloc(DATASIZE);
     strcpy(path, "iris/projects/");
     strcat(path, project_name);
     strcat(path, "/.iris/added");
     FILE * file;
     if ((file = fopen(path, "a")) == NULL)
     {
-        char * msg = malloc(strlen(project_name) + 61);
+        //char * msg = malloc(strlen(project_name) + 61);
+        char * msg = malloc(DATASIZE);
         strcpy(msg, "Error: \"");
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
@@ -201,14 +208,16 @@ void add(char* project_name, char* file_path)
 
 void mod(char* project_name, char* file_path)
 {
-    char* path = malloc(strlen(project_name) + 28);
+    //char* path = malloc(strlen(project_name) + 28);
+    char* path = malloc(DATASIZE);
     strcpy(path, "iris/projects/");
     strcat(path, project_name);
     strcat(path, "/.iris/modified");
     FILE * file;
     if ((file = fopen(path, "a")) == NULL)
     {
-        char * msg = malloc(strlen(project_name) + 61);
+        //char * msg = malloc(strlen(project_name) + 61);
+        char * msg = malloc(DATASIZE);
         strcpy(msg, "Error: \"");
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
@@ -226,14 +235,16 @@ void mod(char* project_name, char* file_path)
 
 void del(char* project_name, char* file_path)
 {
-    char* path = malloc(strlen(project_name) + 27);
+    //char* path = malloc(strlen(project_name) + 27);
+    char* path = malloc(DATASIZE);
     strcpy(path, "iris/projects/");
     strcat(path, project_name);
     strcat(path, "/.iris/removed");
     FILE * file;
     if ((file = fopen(path, "a")) == NULL)
     {
-        char * msg = malloc(strlen(project_name) + 61);
+        char* msg = malloc(DATASIZE);
+//        char * msg = malloc(strlen(project_name) + 61);
         strcpy(msg, "Error: \"");
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
@@ -255,7 +266,8 @@ void status(char* project_name)
 
     FILE *file;
     int i = 0;
-    char *path = malloc(strlen(project_name) + 29);
+    //char *path = malloc(strlen(project_name) + 29);
+    char *path = malloc(DATASIZE);
     char *status = malloc(10*DATASIZE);
 
     for (i = 0; i < 3; ++i)

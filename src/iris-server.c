@@ -224,7 +224,9 @@ void treat(int client_socket)
                 printf("Mkdir request...\n");
                 char* version = malloc(3);
                 sprintf(version, "%d", latest);
-                char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+                //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+                char * real_path = malloc(DATASIZE);
+    
                 strcpy(real_path, "iris-server/projects/");
                 strcat(real_path, datagram->project_name);
                 strcat(real_path,"/r");
@@ -263,8 +265,11 @@ void list_projects()
 {
     FILE *file;
     FILE *version_file;
-    char *projects_path = malloc(21);
-    char *version_path = malloc(50);
+//    char *projects_path = malloc(21);
+//    char *version_path = malloc(50);
+    char *projects_path = malloc(DATASIZE);
+    char *version_path = malloc(DATASIZE);
+
     strcpy(projects_path,"iris-server/.projects");
 
     printf("Available projects on this server:\n");
@@ -280,7 +285,8 @@ void list_projects()
             strcat(version_path, "/.version");
             
             int version;
-            char * user = malloc(20);
+            //char * user = malloc(20);
+            char * user = malloc(DATASIZE);
             if((version_file = fopen(version_path,"r+")) != NULL)
             {
                 fscanf(version_file, "%d\n%s", &version, user);

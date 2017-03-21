@@ -118,7 +118,9 @@ void send_dir(int socket, char* project_name, char* dir_path,
               transaction_t transaction, unsigned int version,
               char* user_name, int on_server)
 {
-    char * real_path = malloc(16 + strlen(project_name) + strlen(dir_path));
+    //char * real_path = malloc(16 + strlen(project_name) + strlen(dir_path));
+    char * real_path = malloc(DATASIZE);
+
     if (on_server == 0)
     {
         strcpy(real_path, "iris/projects/");
