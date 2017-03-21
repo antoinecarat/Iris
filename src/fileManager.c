@@ -90,8 +90,10 @@ datagram_t **prepare_file(char* project_name, char* file_path,
    	datagram_t** data_tab;
 
    	//Construct real path
-   	char * real_path = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
-    //char * real_path = malloc(DATASIZE);
+   	//char * real_path = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
+    printf("CORRUPTION !!!! 1\n");
+    char * real_path = malloc(DATASIZE);
+    printf("CORRUPTION !!!! 2\n");
 
    	if (on_server == 0)
     {
@@ -112,9 +114,14 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 
 	printf(">> Preparing file for sending: %s\n", real_path);
 
+	char * tmp = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
+	strcpy(tmp,real_path);
+	printf("(tmp) %s\n", tmp);
 
     if ((file = fopen(real_path, "r+")) == NULL)
-    {
+    {	
+    	printf("file_path %s\n", file_path);
+    	printf("real_path %s\n", real_path);
         perror("Error: Cannot open file.");
     } else
     {
@@ -217,6 +224,7 @@ void clean_dir(char* dir_path)
     DIR *directory;
     	
 	char * real_path = malloc(DATASIZE);
+
 	strcpy(real_path, dir_path);
 
 	printf(">> Cleaning directory: %s\n", real_path);
@@ -235,11 +243,12 @@ void clean_dir(char* dir_path)
 	       		strcpy(real_path, dir_path);
 				strcat(real_path, "/");
 				strcat(real_path, entry->d_name);
-
                 if(entry->d_type ==  DT_DIR)
                 {
+                	char * tmp = malloc(DATASIZE);
+                	strcpy(tmp,real_path);
                 	clean_dir(real_path);
-                	rmdir(real_path);
+                	rmdir(tmp);
                 } else if(entry->d_type == DT_REG)
                 {
 		        	int ret = remove(real_path);

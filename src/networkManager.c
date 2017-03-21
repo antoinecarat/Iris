@@ -161,10 +161,12 @@ void send_dir(int socket, char* project_name, char* dir_path,
 
             if(strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
             {
-                printf("%s\n", entry->d_name);
+                printf("entre name %s, entry type %d \n", entry->d_name, entry->d_type);
                 if(entry->d_type ==  DT_DIR) {
+                    printf("C'est un directory\n");
                     //char * new_dir_path = malloc(strlen(dir_path) + 2 + strlen(entry->d_name));
                     char * new_dir_path = malloc(DATASIZE);
+                    printf("Nous avons mallocé le dir_path\n");
                     if (strcmp(dir_path, " ") != 0)
                     {
                         strcpy(new_dir_path, dir_path);
@@ -187,7 +189,7 @@ void send_dir(int socket, char* project_name, char* dir_path,
                     
 
                     send_dir(socket, project_name, new_dir_path, transaction, version, user_name, on_server);
-
+                    free(new_dir_path);
                     //free_datagram(datagram);
                 } else if(entry->d_type == DT_REG) {
                     //char * file_path = malloc(strlen(dir_path) + 1 + strlen(entry->d_name));
@@ -203,8 +205,12 @@ void send_dir(int socket, char* project_name, char* dir_path,
                     }
 
                     send_file(socket, project_name, file_path, transaction, version, user_name, on_server);
+                    free(file_path);
                 }
             }
         }
     }
+     free(entry);
+     free(directory);
+     free(real_path);
 }

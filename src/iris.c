@@ -316,7 +316,7 @@ int main(int argc, char **argv)
     char* command = argv[1];
 
     if (argc == 2)
-    {
+    {   //init ou help
         if (strcmp(command, "help") == 0)
         {
             print_help();
@@ -325,19 +325,17 @@ int main(int argc, char **argv)
             init();
         }
     } else if (argc == 3)
-    {
+    {   //status
         char * project_name = argv[2];
         if (strcmp(command, "status") == 0)
         {
             status(project_name);
         }
     } else if (argc == 4)
-    {
+    {   //add mod del
 
         char * project_name = argv[2];
         char * file_path = argv[3];
-
-        init();
         
         if (strcmp(command, "add") == 0)
         {
@@ -350,13 +348,11 @@ int main(int argc, char **argv)
             del(project_name, file_path);
         }
     } else if (argc == 6)
-    {
+    {   //push pull clone create
         char * project_name = argv[2];
         char * server_adress = argv[3];
         char * server_port = argv[4];
         char * user_name = argv[5];
-
-        init();
 
         if (strcmp(command, "create") == 0)
         {
@@ -372,14 +368,12 @@ int main(int argc, char **argv)
             push(project_name, server_adress, atoi(server_port), user_name);
         }
     }  else if (argc == 7)
-    {
+    {   //rebase
         char * project_name = argv[2];
         char * version = argv[3];
         char * server_adress = argv[4];
         char * server_port = argv[5];
         char * user_name = argv[6];
-
-        init();
 
         if (strcmp(command, "rebase") == 0)
         {

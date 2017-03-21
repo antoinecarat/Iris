@@ -92,6 +92,7 @@ void create_project(char* project_name, char * user_name)
         FILE * file_projects;
         file_projects = fopen("iris-server/.projects", "a");
         strcat(project_name, "\n");
+        printf("project_name : %s\n",project_name );
         fwrite(project_name, strlen(project_name), 1, file_projects);
         fclose(file_projects);
     } else {
@@ -265,7 +266,6 @@ void list_projects()
     char *projects_path = malloc(21);
     char *version_path = malloc(50);
     strcpy(projects_path,"iris-server/.projects");
-    strcpy(version_path, "iris-server/projects/");
 
     printf("Available projects on this server:\n");
     if((file = fopen(projects_path,"r+")) != NULL)
@@ -273,9 +273,12 @@ void list_projects()
         char * line = malloc(sizeof(DATASIZE));
         while (fscanf(file, "%s\n", line) > 0)
         {   
+            strcpy(version_path, "iris-server/projects/");
+
             //Get version in line/.version file.
             strcat(version_path, line);
             strcat(version_path, "/.version");
+            
             int version;
             char * user = malloc(20);
             if((version_file = fopen(version_path,"r+")) != NULL)
@@ -308,8 +311,6 @@ int main(int argc, char **argv) {
             init();
         } else if (strcmp(command, "listen") == 0)
         {
-            
-            init();
             wait_for_client();
         } else if (strcmp(command, "list-projects") == 0)
         {
