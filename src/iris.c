@@ -68,6 +68,43 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     send_datagram(server_socket, datagram);
 
     //receive all the files.
+    char* serial = malloc(12 * sizeof(char) + 4*DATASIZE);
+    char * current_file = malloc(DATASIZE);
+    datagram_t ** tab = malloc(999*sizeof(datagram_t));
+    unsigned int i = 0;
+    
+    while(recv(server_socket, serial, 12 * sizeof(char) + 2*DATASIZE, 0) > 0)
+    {
+        printf(">> Receiving: %s\n", serial);
+        datagram_t * datagram = unserialize(serial);
+        if (datagram->transaction == CLONE)
+        {
+            if (datagram->datagram_number == 1)
+            {
+                i=0;
+                strcpy(current_file, datagram->file_path);
+                tab[i] = datagram;
+            } else
+            {
+                tab[++i] = datagram;
+            }
+            if (datagram->datagram_number == datagram->datagram_total)
+            {
+                rebuild_file(datagram->project_name, current_file, datagram->version, tab, 0);
+            }
+        } else if (datagram->transaction == MKDIR)
+        {
+            char* version = malloc(3);
+            //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+            char * real_path = malloc(DATASIZE);
+            strcpy(real_path, "iris/projects/");
+            strcat(real_path, datagram->project_name);
+            strcat(real_path, "/");
+            strcat(real_path, datagram->file_path);
+            create_dir(real_path);
+        }
+    }
+
 
 
     //free(project_name_bis);

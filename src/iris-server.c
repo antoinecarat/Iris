@@ -12,11 +12,16 @@
 
 void init()
 {
+    create_dir("iris-server");
     FILE * file;
     file = fopen("iris-server/.projects", "w+");
-    create_dir("iris-server");
-    create_dir("iris-server/projects");
-    fclose(file);
+ 
+    if (file == NULL){
+        perror("Error: Cannot open file.");
+    } else {
+        create_dir("iris-server/projects");
+        fclose(file);
+    }
 }
 
 
