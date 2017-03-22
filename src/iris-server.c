@@ -82,17 +82,28 @@ void create_project(char* project_name, char * user_name)
 
         update_version(project_name, 0, user_name);
 
-        // FILE * file_author;
-        // char * iris_dir = malloc(DATASIZE);
-        // strcpy(iris_dir, r_path);
-        // strcat(iris_dir, "/.iris");
-        // create_dir(iris_dir);
+        char * iris_dir = malloc(DATASIZE);
+        strcpy(iris_dir,r_path);
+        strcat(iris_dir,"/.iris");
+        create_dir(iris_dir);
 
-        // char * author_file = malloc(DATASIZE);
-        // strcpy(author_file, iris_dir);
-        // strcat(author_file, "/author");
-        // file = freopen(author_file, "w+", file);
-        // fwrite(user_name, strlen(user_name), 1, file);
+        
+        char * version_file = malloc(DATASIZE);
+        strcpy(version_file,iris_dir);
+        strcat(version_file,"/version");
+
+        FILE * file_version = fopen(version_file, "w+");
+        
+        if (file_version == NULL){
+            perror("Error: Cannot open file.");
+        } else {
+            char * note = malloc(10*DATASIZE);
+            strcat(note,"0\n");
+            strcat(note,user_name);
+            strcat(note,"\n");
+            fwrite(note,strlen(note),1,file_version);
+            fclose(file_version);
+        }
 
         FILE * file_projects;
         file_projects = fopen("iris-server/.projects", "a");
@@ -151,14 +162,32 @@ void treat(int client_socket)
         datagram_t * datagram = unserialize(serial);
         unsigned int latest;
         
+        if(datagram->transaction != ACK)
+        {
+            datagram_t *ack = malloc(sizeof(datagram_t));
+            ack->transaction = ACK;
+            ack->project_name = " ";
+            ack->user_name = " ";
+            ack->file_path = " ";
+            ack->data = " ";
+            send_datagram(client_socket, ack);
+        }
+
         switch(datagram->transaction) {
             case CREATE:
                 printf("Create request...\n");
+                latest = 0;
                 if (strcmp(datagram->file_path, " ") == 0)
-                {
+                {    
                     create_project(datagram->project_name, datagram->user_name);
                 } else 
                 {
+                    char * r_path = malloc(DATASIZE);
+                    strcpy(r_path,"iris-server/projects/");
+                    strcat(r_path,datagram->project_name);
+                    strcat(r_path,"/r0/.iris/version");
+
+                    FILE * file_version = fopen(r_path, "a");
                     if (datagram->datagram_number == 1)
                     {
                         i=0;
@@ -170,8 +199,14 @@ void treat(int client_socket)
                     }
                     if (datagram->datagram_number == datagram->datagram_total)
                     {
+                        char * note_file = malloc(DATASIZE);
+                        strcpy(note_file, "A \t");
+                        strcat(note_file, current_file);
+                        strcat(note_file, "\n");
+                        fwrite(note_file,strlen(note_file),1,file_version);   
                         rebuild_file(datagram->project_name, current_file, 0, tab, 1);
                     }
+                    fclose(file_version);
                 }
                 printf("Request treated with succes.\n");
                 break;

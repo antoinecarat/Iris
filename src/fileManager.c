@@ -92,9 +92,7 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 
    	//Construct real path
    	//char * real_path = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
-    printf("CORRUPTION !!!! 1\n");
     char * real_path = malloc(DATASIZE);
-    printf("CORRUPTION !!!! 2\n");
 
    	if (on_server == 0)
     {
@@ -106,25 +104,18 @@ datagram_t **prepare_file(char* project_name, char* file_path,
         strcpy(real_path, "iris-server/projects/");
         strcat(real_path, project_name);
         strcat(real_path, "/r");
-        char* revision = malloc(3);
-        sprintf(revision, "%d", version);
-        strcat(real_path,revision);
+    	char* revision = malloc(3);
+    	sprintf(revision, "%d", version);
+    	strcat(real_path,revision);
         strcat(real_path,"/");
 		strcat(real_path, file_path);
     }
 
 	printf(">> Preparing file for sending: %s\n", real_path);
-
-	//char * tmp = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
-	char * tmp = malloc(3* DATASIZE);
-	strcpy(tmp,real_path);
-	printf("(tmp) %s\n", tmp);
-
+	
     if ((file = fopen(real_path, "r+")) == NULL)
     {	
-    	printf("file_path %s\n", file_path);
-    	printf("real_path %s\n", real_path);
-        perror("Error: Cannot open file.");
+    	perror("Error: Cannot open file.");
     } else
     {
     	fseek(file, 0L, SEEK_END);

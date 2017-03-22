@@ -49,7 +49,7 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     char * project_name_bis = malloc(DATASIZE);
     strcpy(project_name_bis, project_name);
     strcat(project_name_bis, "\n");
-    fwrite(project_name_bis, strlen(project_name), 1, file);
+    fwrite(project_name_bis, strlen(project_name_bis), 1, file);
     fclose(file);
 
     //char * path = malloc(strlen(project_name) + 14);
@@ -77,6 +77,18 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     {
         printf(">> Receiving: %s\n", serial);
         datagram_t * datagram = unserialize(serial);
+
+        if(datagram->transaction != ACK)
+        {
+            datagram_t *ack = malloc(sizeof(datagram_t));
+            ack->transaction = ACK;
+            ack->project_name = " ";
+            ack->user_name = " ";
+            ack->file_path = " ";
+            ack->data = " ";
+            send_datagram(server_socket, ack);
+        }
+
         if (datagram->transaction == CLONE)
         {
             if (datagram->datagram_number == 1)
@@ -94,7 +106,6 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
             }
         } else if (datagram->transaction == MKDIR)
         {
-            char* version = malloc(3);
             //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
             char * real_path = malloc(DATASIZE);
             strcpy(real_path, "iris/projects/");
@@ -105,6 +116,22 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
         }
     }
 
+    //Creating notification files
+    char * added_file = malloc(DATASIZE);
+    char * modified_file = malloc(DATASIZE);
+    char * removed_file = malloc(DATASIZE);
+    strcpy(added_file, path);
+    strcat(added_file, "/.iris/added");
+    strcpy(modified_file, path);
+    strcat(modified_file, "/.iris/modified");
+    strcpy(removed_file, path);
+    strcat(removed_file, "/.iris/removed");
+    FILE* added = fopen(added_file, "w+");
+    FILE* modified = fopen(modified_file, "w+");
+    FILE* removed = fopen(removed_file, "w+");
+    fclose(added);
+    fclose(modified);
+    fclose(removed);
 
 
     //free(project_name_bis);
@@ -141,6 +168,19 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
     {
         printf(">> Receiving: %s\n", serial);
         datagram_t * datagram = unserialize(serial);
+
+        if(datagram->transaction != ACK)
+        {
+            datagram_t *ack = malloc(sizeof(datagram_t));
+            ack->transaction = ACK;
+            ack->project_name = " ";
+            ack->user_name = " ";
+            ack->file_path = " ";
+            ack->data = " ";
+            send_datagram(server_socket, ack);
+        }
+
+
         if (datagram->transaction == PULL)
         {
             if (datagram->datagram_number == 1)
@@ -227,11 +267,12 @@ void add(char* project_name, char* file_path)
     if ((file = fopen(path, "a")) == NULL)
     {
         //char * msg = malloc(strlen(project_name) + 61);
-        char * msg = malloc(DATASIZE);
+        /*char * msg = malloc(DATASIZE);
         strcpy(msg, "Error: \"");
         strcat(msg, project_name);
         strcat(msg, "\" not found. Please clone project before notifying anything.\n");
-        perror(msg);
+        perror(msg);*/
+        printf("Error: \"%s\" not found. Please clone project before notifying anything.\n", path);
         //free(msg);
     } else
     {

@@ -82,10 +82,20 @@ int create_server_socket()
 	return socket_descriptor;
 }
 
-void receive_data()
+void wait_for_ack(int socket)
 {
-	
+	printf("Waiting for ACK\n");
+    char* serial = malloc(12 * sizeof(char) + 4*DATASIZE);
+    if(recv(socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
+    {
+         datagram_t * datagram = unserialize(serial);
+         if (datagram->transaction == ACK)
+         {
+            printf("ACK received\n");
+         }
+    }
 }
+
 
 void send_datagram(int socket, datagram_t * datagram)
 {
@@ -93,7 +103,10 @@ void send_datagram(int socket, datagram_t * datagram)
     printf("Send: %s\n", serial);
     unsigned int size = strlen(serial) * sizeof(char);
     send(socket, serial, size, 0);
-    sleep(1);
+    if (datagram->transaction != ACK)
+    {
+        wait_for_ack(socket);
+    }
 }
 
 void send_file(int socket, char* project_name, char* file_path, 
@@ -163,12 +176,10 @@ void send_dir(int socket, char* project_name, char* dir_path,
 
             if(strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
             {
-                printf("entre name %s, entry type %d \n", entry->d_name, entry->d_type);
                 if(entry->d_type ==  DT_DIR) {
-                    printf("C'est un directory\n");
                     //char * new_dir_path = malloc(strlen(dir_path) + 2 + strlen(entry->d_name));
                     char * new_dir_path = malloc(DATASIZE);
-                    printf("Nous avons mallocé le dir_path\n");
+                    
                     if (strcmp(dir_path, " ") != 0)
                     {
                         strcpy(new_dir_path, dir_path);

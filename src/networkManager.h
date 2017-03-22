@@ -42,9 +42,11 @@ int connect_to_server(char* name, unsigned int port);
 int create_server_socket();
 
 /**
- * @brief Receive data
+ * @brief Wait for acquitment
+ * 
+ * @param socket Socket where to send
 */
-void receive_data();
+void wait_for_ack(int socket);
 
 /**
  * @brief Send a datagram.

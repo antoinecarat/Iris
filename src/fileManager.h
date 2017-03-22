@@ -27,7 +27,8 @@ enum transaction_e {
   PULL,
   PUSH,
   REBASE,
-  MKDIR
+  MKDIR,
+  ACK
 };
 
 typedef enum transaction_e transaction_t;
