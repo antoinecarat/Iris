@@ -146,144 +146,169 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
 
 void pull(char* project_name, char* server_adress, unsigned int server_port, char* user_name)
 {
-    int server_socket = connect_to_server(server_adress, server_port);
-
-    //char * path = malloc(strlen(project_name) + 14);
-    char * path = malloc(DATASIZE);
+    char* path = malloc(DATASIZE);
     strcpy(path, "iris/projects/");
     strcat(path, project_name);
-    
-    datagram_t *datagram = malloc(sizeof(datagram_t));
-    datagram->transaction = PULL;
-    datagram->project_name = project_name;
-    datagram->user_name = user_name;
-    datagram->file_path = " ";
-    datagram->data = " ";
-
-    send_datagram(server_socket, datagram);
-
-    clean_dir(path);
-
-    //receive all the files.
-    char* serial = malloc(12 * sizeof(char) + 4*DATASIZE);
-    char * current_file = malloc(DATASIZE);
-    datagram_t ** tab = malloc(999*sizeof(datagram_t));
-    unsigned int i = 0;
-    
-    while(recv(server_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
+    strcat(path, "/.iris/added");
+    FILE * file;
+    if ((file = fopen(path, "a")) == NULL)
     {
-        printf(">> Receiving: %s\n", serial);
-        datagram_t * datagram = unserialize(serial);
+        printf("Error: \"%s\" not found. Please clone project before trying to push anything.\n", path);
+    } else
+    {
+        fclose(file);
 
-        if(datagram->transaction != ACK)
+        int server_socket = connect_to_server(server_adress, server_port);
+
+        //char * path = malloc(strlen(project_name) + 14);
+        char * path = malloc(DATASIZE);
+        strcpy(path, "iris/projects/");
+        strcat(path, project_name);
+        
+        datagram_t *datagram = malloc(sizeof(datagram_t));
+        datagram->transaction = PULL;
+        datagram->project_name = project_name;
+        datagram->user_name = user_name;
+        datagram->file_path = " ";
+        datagram->data = " ";
+
+        send_datagram(server_socket, datagram);
+
+        clean_dir(path);
+
+        //receive all the files.
+        char* serial = malloc(12 * sizeof(char) + 4*DATASIZE);
+        char * current_file = malloc(DATASIZE);
+        datagram_t ** tab = malloc(999*sizeof(datagram_t));
+        unsigned int i = 0;
+        
+        while(recv(server_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
         {
-            datagram_t *ack = malloc(sizeof(datagram_t));
-            ack->transaction = ACK;
-            ack->project_name = " ";
-            ack->user_name = " ";
-            ack->file_path = " ";
-            ack->data = " ";
-            send_datagram(server_socket, ack);
+            printf(">> Receiving: %s\n", serial);
+            datagram_t * datagram = unserialize(serial);
+
+            if(datagram->transaction != ACK)
+            {
+                datagram_t *ack = malloc(sizeof(datagram_t));
+                ack->transaction = ACK;
+                ack->project_name = " ";
+                ack->user_name = " ";
+                ack->file_path = " ";
+                ack->data = " ";
+                send_datagram(server_socket, ack);
+            }
+
+
+            if (datagram->transaction == PULL)
+            {
+                if (datagram->datagram_number == 1)
+                {
+                    i=0;
+                    strcpy(current_file, datagram->file_path);
+                    tab[i] = datagram;
+                } else
+                {
+                    tab[++i] = datagram;
+                }
+                if (datagram->datagram_number == datagram->datagram_total)
+                {
+                    rebuild_file(datagram->project_name, current_file, datagram->version, tab, 0);
+                }
+            } else if (datagram->transaction == MKDIR)
+            {
+                //char* version = malloc(3);
+                //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+                char * real_path = malloc(DATASIZE);
+                strcpy(real_path, "iris/projects/");
+                strcat(real_path, datagram->project_name);
+                strcat(real_path, "/");
+                strcat(real_path, datagram->file_path);
+                create_dir(real_path);
+            }
         }
 
+        //Creating notification files
+        char * added_file = malloc(DATASIZE);
+        char * modified_file = malloc(DATASIZE);
+        char * removed_file = malloc(DATASIZE);
+        strcpy(added_file, path);
+        strcat(added_file, "/.iris/added");
+        strcpy(modified_file, path);
+        strcat(modified_file, "/.iris/modified");
+        strcpy(removed_file, path);
+        strcat(removed_file, "/.iris/removed");
+        FILE* added = fopen(added_file, "w+");
+        FILE* modified = fopen(modified_file, "w+");
+        FILE* removed = fopen(removed_file, "w+");
 
-        if (datagram->transaction == PULL)
-        {
-            if (datagram->datagram_number == 1)
-            {
-                i=0;
-                strcpy(current_file, datagram->file_path);
-                tab[i] = datagram;
-            } else
-            {
-                tab[++i] = datagram;
-            }
-            if (datagram->datagram_number == datagram->datagram_total)
-            {
-                rebuild_file(datagram->project_name, current_file, datagram->version, tab, 0);
-            }
-        } else if (datagram->transaction == MKDIR)
-        {
-            //char* version = malloc(3);
-            //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
-            char * real_path = malloc(DATASIZE);
-            strcpy(real_path, "iris/projects/");
-            strcat(real_path, datagram->project_name);
-            strcat(real_path, "/");
-            strcat(real_path, datagram->file_path);
-            create_dir(real_path);
-        }
-    }
-
-    //Creating notification files
-    char * added_file = malloc(DATASIZE);
-    char * modified_file = malloc(DATASIZE);
-    char * removed_file = malloc(DATASIZE);
-    strcpy(added_file, path);
-    strcat(added_file, "/.iris/added");
-    strcpy(modified_file, path);
-    strcat(modified_file, "/.iris/modified");
-    strcpy(removed_file, path);
-    strcat(removed_file, "/.iris/removed");
-    FILE* added = fopen(added_file, "w+");
-    FILE* modified = fopen(modified_file, "w+");
-    FILE* removed = fopen(removed_file, "w+");
-
-    //FIXME push files empty
-    fwrite("\n",strlen("\n"),1,added);
-    fwrite("\n",strlen("\n"),1,modified);
-    fwrite("\n",strlen("\n"),1,removed);
-    
-    fclose(added);
-    fclose(modified);
-    fclose(removed);
-    //free_datagram(datagram);
-    //free(path);
+        //FIXME push files empty
+        fwrite("\n",strlen("\n"),1,added);
+        fwrite("\n",strlen("\n"),1,modified);
+        fwrite("\n",strlen("\n"),1,removed);
+        
+        fclose(added);
+        fclose(modified);
+        fclose(removed);
+        //free_datagram(datagram);
+        //free(path);
+    }    
 }
 
 void push(char* project_name, char* server_adress, unsigned int server_port, char* user_name)
 {
-    int version = 0;
-    int server_socket = connect_to_server(server_adress, server_port);
+    char* path = malloc(DATASIZE);
+    strcpy(path, "iris/projects/");
+    strcat(path, project_name);
+    strcat(path, "/.iris/added");
+    FILE * file;
+    if ((file = fopen(path, "a")) == NULL)
+    {
+        printf("Error: \"%s\" not found. Please clone project before pushing anything.\n", path);
+    } else
+    {
+        fclose(file);
 
-    datagram_t *datagram = malloc(sizeof(datagram_t));
-    datagram->transaction = PUSH;
-    datagram->project_name = project_name;
-    datagram->user_name = user_name;
-    datagram->file_path = " ";
-    datagram->data = " ";
-    datagram->version = version;
-    
-    send_datagram(server_socket, datagram);
+        int version = 0;
+        int server_socket = connect_to_server(server_adress, server_port);
 
-    send_dir(server_socket, project_name, " ", PUSH, version, user_name, 0);
-    
-    char * path = malloc(DATASIZE);
-    strcpy(path,"iris/projects/");
-    strcat(path,datagram->project_name);
-  
-    char * added_file = malloc(DATASIZE);
-    char * modified_file = malloc(DATASIZE);
-    char * removed_file = malloc(DATASIZE);
-    strcpy(added_file, path);
-    strcat(added_file, "/.iris/added");
-    strcpy(modified_file, path);
-    strcat(modified_file, "/.iris/modified");
-    strcpy(removed_file, path);
-    strcat(removed_file, "/.iris/removed");
-  
-    remove(added_file);
-    remove(modified_file);
-    remove(removed_file);
+        datagram_t *datagram = malloc(sizeof(datagram_t));
+        datagram->transaction = PUSH;
+        datagram->project_name = project_name;
+        datagram->user_name = user_name;
+        datagram->file_path = " ";
+        datagram->data = " ";
+        datagram->version = version;
+        
+        send_datagram(server_socket, datagram);
 
-    FILE* added = fopen(added_file, "w+");
-    FILE* modified = fopen(modified_file, "w+");
-    FILE* removed = fopen(removed_file, "w+");
-    
-    fclose(added);
-    fclose(modified);
-    fclose(removed);    
+        send_dir(server_socket, project_name, " ", PUSH, version, user_name, 0);
+        
+        char * path = malloc(DATASIZE);
+        strcpy(path,"iris/projects/");
+        strcat(path,datagram->project_name);
+      
+        char * added_file = malloc(DATASIZE);
+        char * modified_file = malloc(DATASIZE);
+        char * removed_file = malloc(DATASIZE);
+        strcpy(added_file, path);
+        strcat(added_file, "/.iris/added");
+        strcpy(modified_file, path);
+        strcat(modified_file, "/.iris/modified");
+        strcpy(removed_file, path);
+        strcat(removed_file, "/.iris/removed");
+      
+        remove(added_file);
+        remove(modified_file);
+        remove(removed_file);
 
+        FILE* added = fopen(added_file, "w+");
+        FILE* modified = fopen(modified_file, "w+");
+        FILE* removed = fopen(removed_file, "w+");
+        
+        fclose(added);
+        fclose(modified);
+        fclose(removed);    
+    }
 
 
 }
@@ -462,74 +487,72 @@ int main(int argc, char **argv)
 {
     char* command = argv[1];
 
-    if (argc == 2)
+    if (argc == 2 && strcmp(command, "help") == 0)
     {   //init ou help
-        if (strcmp(command, "help") == 0)
-        {
-            print_help();
-        } else if (strcmp(command, "init") == 0)
-        {
-            init();
-        }
-    } else if (argc == 3)
+        print_help();
+    } else if (argc == 2 && strcmp(command, "init") == 0)
+    {
+        init();
+    } else if (argc == 3  && strcmp(command, "status") == 0)
     {   //status
         char * project_name = argv[2];
-        if (strcmp(command, "status") == 0)
-        {
-            status(project_name);
-        }
-    } else if (argc == 4)
+        status(project_name);
+    } else if (argc == 4 && strcmp(command, "add") == 0)
     {   //add mod del
-
         char * project_name = argv[2];
         char * file_path = argv[3];
-        
-        if (strcmp(command, "add") == 0)
-        {
-            add(project_name, file_path);
-        } else if (strcmp(command, "mod") == 0)
-        {
-            mod(project_name, file_path);
-        } else if (strcmp(command, "del") == 0)
-        {
-            del(project_name, file_path);
-        }
-    } else if (argc == 6)
+        add(project_name, file_path);
+    } else if (argc == 4 && strcmp(command, "mod") == 0)
+    {   
+        char * project_name = argv[2];
+        char * file_path = argv[3];
+        mod(project_name, file_path);
+    } else if (argc == 4 && strcmp(command, "del") == 0)
+    {
+        char * project_name = argv[2];
+        char * file_path = argv[3];
+        del(project_name, file_path);
+    } else if (argc == 6 && strcmp(command, "create") == 0)
     {   //push pull clone create
         char * project_name = argv[2];
         char * server_adress = argv[3];
         char * server_port = argv[4];
         char * user_name = argv[5];
-
-        if (strcmp(command, "create") == 0)
-        {
-            create(project_name, server_adress, atoi(server_port), user_name);
-        } else if (strcmp(command, "clone") == 0)
-        {
-            clone(project_name, server_adress, atoi(server_port), user_name);
-        } else if (strcmp(command, "pull") == 0)
-        {
-            pull(project_name, server_adress, atoi(server_port), user_name);
-        } else if (strcmp(command, "push") == 0)
-        {
-            push(project_name, server_adress, atoi(server_port), user_name);
-        }
-    }  else if (argc == 7)
+        create(project_name, server_adress, atoi(server_port), user_name);
+    } else if (argc == 6 && strcmp(command, "clone") == 0)
+    {
+        char * project_name = argv[2];
+        char * server_adress = argv[3];
+        char * server_port = argv[4];
+        char * user_name = argv[5];
+        clone(project_name, server_adress, atoi(server_port), user_name);
+    } else if (argc == 6 && strcmp(command, "pull") == 0)
+    {
+        char * project_name = argv[2];
+        char * server_adress = argv[3];
+        char * server_port = argv[4];
+        char * user_name = argv[5];
+        pull(project_name, server_adress, atoi(server_port), user_name);
+    } else if (argc == 6 && strcmp(command, "push") == 0)
+    {
+        char * project_name = argv[2];
+        char * server_adress = argv[3];
+        char * server_port = argv[4];
+        char * user_name = argv[5];
+        push(project_name, server_adress, atoi(server_port), user_name);
+    }  else if (argc == 7 && strcmp(command, "rebase") == 0)
     {   //rebase
         char * project_name = argv[2];
         char * version = argv[3];
         char * server_adress = argv[4];
         char * server_port = argv[5];
         char * user_name = argv[6];
-
-        if (strcmp(command, "rebase") == 0)
-        {
-            rebase(project_name, atoi(version), server_adress, atoi(server_port), user_name);
-        }
-    } else {
-        perror("Usage : iris <command> <args>.\n");
-        perror("Enter iris help to know more.\n");
+        rebase(project_name, atoi(version), server_adress, atoi(server_port), user_name);
+    } else
+    {
+        printf("Usage : iris <command> <args>.\n");
+        printf("Enter iris help to know more.\n");
         exit(1);
     }
-    exit(0);  
+    return(0);  
 }

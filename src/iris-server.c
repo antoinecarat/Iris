@@ -433,26 +433,22 @@ void list_projects()
 int main(int argc, char **argv) {
 
     char* command = argv[1];
-    if (argc == 2)
+    if (argc == 2 && strcmp(command, "help") == 0)
     {
-        if (strcmp(command, "help") == 0)
-        {
-            print_help();
-        } else if (strcmp(command, "init") == 0)
-        {
-            init();
-        } else if (strcmp(command, "listen") == 0)
-        {
-            wait_for_client();
-        } else if (strcmp(command, "list-projects") == 0)
-        {
-            
-            list_projects();
-        }
+        print_help();
+    } else if (argc == 2 && strcmp(command, "init") == 0)
+    {
+        init();
+    } else if (argc == 2 && strcmp(command, "listen") == 0)
+    {
+        wait_for_client();
+    } else if (argc == 2 && strcmp(command, "list-projects") == 0)
+    {    
+        list_projects();
     } else
     {
-        perror("Usage : iris-server <command> [<args>].\n");
-        perror("Enter iris-server help to know more.\n");
+        printf("Usage : iris-server <command> [<args>].\n");
+        printf("Enter iris-server help to know more.\n");
         exit(1);
     }
     exit(0);
