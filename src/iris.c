@@ -29,6 +29,7 @@ void create(char* project_name, char* server_adress, unsigned int server_port, c
     int server_socket = connect_to_server(server_adress, server_port);
 
     datagram_t *datagram = malloc(sizeof(datagram_t));
+
     datagram->transaction = CREATE;
     datagram->project_name = project_name;
     datagram->user_name = user_name;
@@ -73,7 +74,7 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     datagram_t ** tab = malloc(999*sizeof(datagram_t));
     unsigned int i = 0;
     
-    while(recv(server_socket, serial, 12 * sizeof(char) + 2*DATASIZE, 0) > 0)
+    while(recv(server_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
     {
         printf(">> Receiving: %s\n", serial);
         datagram_t * datagram = unserialize(serial);
@@ -129,10 +130,15 @@ void clone(char* project_name, char* server_adress, unsigned int server_port, ch
     FILE* added = fopen(added_file, "w+");
     FILE* modified = fopen(modified_file, "w+");
     FILE* removed = fopen(removed_file, "w+");
+
+    //FIXME push files empty
+    fwrite("\n",strlen("\n"),1,added);
+    fwrite("\n",strlen("\n"),1,modified);
+    fwrite("\n",strlen("\n"),1,removed);
+    
     fclose(added);
     fclose(modified);
     fclose(removed);
-
 
     //free(project_name_bis);
     //free(path);
@@ -164,7 +170,7 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
     datagram_t ** tab = malloc(999*sizeof(datagram_t));
     unsigned int i = 0;
     
-    while(recv(server_socket, serial, 12 * sizeof(char) + 2*DATASIZE, 0) > 0)
+    while(recv(server_socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
     {
         printf(">> Receiving: %s\n", serial);
         datagram_t * datagram = unserialize(serial);
@@ -198,7 +204,7 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
             }
         } else if (datagram->transaction == MKDIR)
         {
-            char* version = malloc(3);
+            //char* version = malloc(3);
             //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
             char * real_path = malloc(DATASIZE);
             strcpy(real_path, "iris/projects/");
@@ -209,6 +215,28 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
         }
     }
 
+    //Creating notification files
+    char * added_file = malloc(DATASIZE);
+    char * modified_file = malloc(DATASIZE);
+    char * removed_file = malloc(DATASIZE);
+    strcpy(added_file, path);
+    strcat(added_file, "/.iris/added");
+    strcpy(modified_file, path);
+    strcat(modified_file, "/.iris/modified");
+    strcpy(removed_file, path);
+    strcat(removed_file, "/.iris/removed");
+    FILE* added = fopen(added_file, "w+");
+    FILE* modified = fopen(modified_file, "w+");
+    FILE* removed = fopen(removed_file, "w+");
+
+    //FIXME push files empty
+    fwrite("\n",strlen("\n"),1,added);
+    fwrite("\n",strlen("\n"),1,modified);
+    fwrite("\n",strlen("\n"),1,removed);
+    
+    fclose(added);
+    fclose(modified);
+    fclose(removed);
     //free_datagram(datagram);
     //free(path);
 }
@@ -229,6 +257,35 @@ void push(char* project_name, char* server_adress, unsigned int server_port, cha
     send_datagram(server_socket, datagram);
 
     send_dir(server_socket, project_name, " ", PUSH, version, user_name, 0);
+    
+    char * path = malloc(DATASIZE);
+    strcpy(path,"iris/projects/");
+    strcat(path,datagram->project_name);
+  
+    char * added_file = malloc(DATASIZE);
+    char * modified_file = malloc(DATASIZE);
+    char * removed_file = malloc(DATASIZE);
+    strcpy(added_file, path);
+    strcat(added_file, "/.iris/added");
+    strcpy(modified_file, path);
+    strcat(modified_file, "/.iris/modified");
+    strcpy(removed_file, path);
+    strcat(removed_file, "/.iris/removed");
+  
+    remove(added_file);
+    remove(modified_file);
+    remove(removed_file);
+
+    FILE* added = fopen(added_file, "w+");
+    FILE* modified = fopen(modified_file, "w+");
+    FILE* removed = fopen(removed_file, "w+");
+    
+    fclose(added);
+    fclose(modified);
+    fclose(removed);    
+
+
+
 }
 
 void rebase(char* project_name, unsigned int version, char* server_adress, unsigned int server_port, char* user_name)
@@ -367,7 +424,7 @@ void status(char* project_name)
 
         if((file = fopen(path,"r+")) != NULL)
         {
-            char * line = malloc(sizeof(DATASIZE));
+            char * line = malloc(DATASIZE);
             while (fscanf(file, "%s\n", line) > 0)
             {   
                 printf("%s\t", status);

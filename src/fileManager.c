@@ -23,7 +23,6 @@ char* serialize(datagram_t* datagram)
 	//char* tmp = malloc(3 * sizeof(char));
 	char * tmp = malloc(DATASIZE);
 
-
 	sprintf(tmp, "%d", datagram->transaction);
 	strcpy(res, tmp);
 	strcat(res, "¤");
@@ -64,10 +63,10 @@ datagram_t* unserialize(char * serial)
  	}
 
  	datagram_t* datagram = malloc(sizeof(datagram_t));
-	datagram->project_name = malloc(strlen(tab[1]));
-	datagram->user_name = malloc(strlen(tab[2]));
-	datagram->file_path = malloc(strlen(tab[4]));
-	datagram->data = malloc(strlen(tab[8]));
+	datagram->project_name = malloc(DATASIZE);
+	datagram->user_name = malloc(DATASIZE);
+	datagram->file_path = malloc(DATASIZE);
+	datagram->data = malloc(DATASIZE);
 
 	datagram->transaction = atoi(tab[0]);
 	strcpy(datagram->project_name,tab[1]);
@@ -126,7 +125,6 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 		unsigned int i;
 
 		data_tab = malloc(nb_datagrams * sizeof(datagram_t));
-
 		for (i=0; i<nb_datagrams; ++i)
 		{
 			unsigned int mini = MIN(DATASIZE, file_size - already_read);
@@ -136,7 +134,6 @@ datagram_t **prepare_file(char* project_name, char* file_path,
 			data_tab[i]->user_name = malloc(DATASIZE);
 			data_tab[i]->file_path = malloc(DATASIZE);
 			data_tab[i]->data = malloc(DATASIZE);
-			
 			fread(data_tab[i]->data, mini, 1, file);
 			data_tab[i]->transaction = transaction;
 			strcpy(data_tab[i]->project_name, project_name);
@@ -188,8 +185,8 @@ void rebuild_file(char* project_name, char* file_path, unsigned int version, dat
         perror("Error: Cannot create file.");
     } else {
 		unsigned int i = 0;
-	    file = freopen(real_path,"a+",file);
-	  	for(i=0; tab[i] != NULL; ++i) {
+	    file = freopen(real_path,"a",file);
+	  	for(i=0; i<tab[0]->datagram_total; ++i) {
 		   fwrite(tab[i]->data, tab[i]->data_length, 1, file);
 		}
 	  	fclose(file);    	
@@ -248,7 +245,7 @@ void clean_dir(char* dir_path)
 		        }
 		    }
         }
-        closedir(dir_path);
+        closedir(directory);
     }
 }
 

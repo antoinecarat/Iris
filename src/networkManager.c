@@ -86,6 +86,7 @@ void wait_for_ack(int socket)
 {
 	printf("Waiting for ACK\n");
     char* serial = malloc(12 * sizeof(char) + 4*DATASIZE);
+
     if(recv(socket, serial, 12 * sizeof(char) + 4*DATASIZE, 0) > 0)
     {
          datagram_t * datagram = unserialize(serial);
@@ -117,6 +118,7 @@ void send_file(int socket, char* project_name, char* file_path,
 	unsigned int i;
 	for (i = 0; i < data[0]->datagram_total; ++i)
 	{
+
 		send_datagram(socket, data[i]);
 	}
 
@@ -133,7 +135,6 @@ void send_dir(int socket, char* project_name, char* dir_path,
 {
     //char * real_path = malloc(16 + strlen(project_name) + strlen(dir_path));
     char * real_path = malloc(DATASIZE);
-
     if (on_server == 0)
     {
         strcpy(real_path, "iris/projects/");
@@ -179,7 +180,6 @@ void send_dir(int socket, char* project_name, char* dir_path,
                 if(entry->d_type ==  DT_DIR) {
                     //char * new_dir_path = malloc(strlen(dir_path) + 2 + strlen(entry->d_name));
                     char * new_dir_path = malloc(DATASIZE);
-                    
                     if (strcmp(dir_path, " ") != 0)
                     {
                         strcpy(new_dir_path, dir_path);
@@ -216,8 +216,11 @@ void send_dir(int socket, char* project_name, char* dir_path,
                     } else {
                         strcpy(file_path, entry->d_name);
                     }
-
-                    send_file(socket, project_name, file_path, transaction, version, user_name, on_server);
+                    //Client should not send his .iris/version file
+                    printf("name: %s ; on_server? %d ; dir: %s\n", entry->d_name, on_server, dir_path);
+                    if(!((strcmp(entry->d_name, "version") == 0) && on_server == 0 && (strcmp(dir_path, ".iris") == 0))) {
+                        send_file(socket, project_name, file_path, transaction, version, user_name, on_server);
+                    }
                     free(file_path);
                 }
             }

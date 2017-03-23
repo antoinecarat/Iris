@@ -28,11 +28,13 @@ void init()
 unsigned int get_latest(char * project_name)
 {
     char* path = malloc(DATASIZE);
+
     strcpy(path, "iris-server/projects/");
     strcat(path, project_name);
     
     FILE * file_version;
     char * version_file = malloc(DATASIZE);
+
     strcpy(version_file, path);
     strcat(version_file, "/.version");
     file_version = fopen(version_file, "r+");
@@ -45,6 +47,7 @@ unsigned int get_latest(char * project_name)
 void update_version(char * project_name, unsigned int version, char * user_name)
 {
     char* path = malloc(DATASIZE);
+
     strcpy(path, "iris-server/projects/");
     strcat(path, project_name);
 
@@ -164,7 +167,8 @@ void treat(int client_socket)
         
         if(datagram->transaction != ACK)
         {
-            datagram_t *ack = malloc(sizeof(datagram_t));
+            datagram_t *ack;
+            ack = malloc(sizeof(datagram_t));
             ack->transaction = ACK;
             ack->project_name = " ";
             ack->user_name = " ";
@@ -230,30 +234,114 @@ void treat(int client_socket)
                 {
                     update_version(datagram->project_name, latest + 1, datagram->user_name);
                     latest = get_latest(datagram->project_name);
+
                     char* r_path = malloc(DATASIZE);
                     strcpy(r_path, "iris-server/projects/");
                     strcat(r_path, datagram->project_name);
                     strcat(r_path, "/r");
                     char* revision = malloc(3);
                     sprintf(revision, "%d", latest);
-                    strcat(r_path,revision);
+                    strcat(r_path,revision);    
+                    char* version_path = malloc(DATASIZE);
+                    strcpy(version_path, r_path);
+                    strcat(version_path, "/.iris");
                     create_dir(r_path);
-                } else  {
+
+                    create_dir(version_path);
+                    strcat(version_path, "/version");
+
+                    FILE * file_version = fopen(version_path, "w+");
+        
+                    if (file_version == NULL){
+                        perror("Error: Cannot open file.");
+                    } else {
+                        char * note = malloc(10*DATASIZE);
+                        printf("revision : %s\n", revision);
+                        strcat(note,revision);
+                        strcat(note,"\n");
+                        strcat(note,datagram->user_name);
+                        strcat(note,"\n");
+                        fwrite(note,strlen(note),1,file_version);
+                        fclose(file_version);
+                    }
+
+                } else {
  
+                    char* r_path = malloc(DATASIZE);
+                    strcpy(r_path, "iris-server/projects/");
+                    strcat(r_path, datagram->project_name);
+                    strcat(r_path, "/r");
+                    char* revision = malloc(3);
+                    sprintf(revision, "%d", latest);
+                    strcat(r_path,revision);    
+                    
                     if (datagram->datagram_number == 1)
+                    {
+                        i=0;
+                        strcpy(current_file, datagram->file_path);
+                        tab[i] = datagram;
+                    } else
+                    {
+                        tab[++i] = datagram;
+                    }
+                    if (datagram->datagram_number == datagram->datagram_total)
+                    {
+                        rebuild_file(datagram->project_name, current_file, latest, tab, 1);
+
+                        if(strcmp(current_file,".iris/added") == 0 || strcmp(current_file,".iris/modified") == 0 || strcmp(current_file,".iris/removed") == 0)
                         {
-                            i=0;
-                            strcpy(current_file, datagram->file_path);
-                            tab[i] = datagram;
-                        } else
-                        {
-                            tab[++i] = datagram;
-                        }
-                        if (datagram->datagram_number == datagram->datagram_total)
-                        {
-                            rebuild_file(datagram->project_name, current_file, latest, tab, 1);
-                        }
-                    }    
+
+                            char * iris_path = malloc(DATASIZE);
+                            strcpy(iris_path,r_path);
+                            strcat(iris_path,"/");
+                            strcat(iris_path,current_file);                            
+
+                            char* version_path = malloc(DATASIZE);
+                            strcpy(version_path, r_path);
+                            strcat(version_path, "/.iris/version");
+                            
+                            char* status = malloc(DATASIZE);
+                            if(strcmp(current_file,".iris/added") == 0)
+                            {
+                                strcpy(status, "A");
+                            } else if(strcmp(current_file,".iris/modified") == 0)
+                            {
+                                strcpy(status, "M");
+                            } else if(strcmp(current_file,".iris/removed") == 0)
+                            {
+                                strcpy(status, "D");
+                            }
+
+                            FILE * file_version;
+                            if((file_version = fopen(version_path,"a")) != NULL)
+                            {
+                                FILE * file_iris;
+                                if((file_iris = fopen(iris_path,"r+")) != NULL)
+                                {
+                                    char * line = malloc(DATASIZE);
+                                    while (fscanf(file_iris, "%s\n", line) > 0)
+                                    {
+                                        char* new_line = malloc(DATASIZE);
+                                        strcpy(new_line, status);
+                                        strcat(new_line, "\t");
+                                        strcat(new_line, line);
+                                        strcat(new_line, "\n");
+                                        fwrite(new_line ,strlen(new_line),1,file_version);
+                                    }
+                                    fclose(file_iris);
+                                    remove(iris_path);
+                                } else
+                                {
+                                    perror("Cannot open file.");
+                                }
+                                fclose(file_version);
+                            } else
+                            {
+                                perror("Cannot open version file.");
+                            }   
+                        }                           
+                    }
+                }       
                 break;
 
             case REBASE:
@@ -266,7 +354,6 @@ void treat(int client_socket)
                 sprintf(version, "%d", latest);
                 //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
                 char * real_path = malloc(DATASIZE);
-    
                 strcpy(real_path, "iris-server/projects/");
                 strcat(real_path, datagram->project_name);
                 strcat(real_path,"/r");
@@ -309,13 +396,12 @@ void list_projects()
 //    char *version_path = malloc(50);
     char *projects_path = malloc(DATASIZE);
     char *version_path = malloc(DATASIZE);
-
     strcpy(projects_path,"iris-server/.projects");
 
     printf("Available projects on this server:\n");
     if((file = fopen(projects_path,"r+")) != NULL)
     {
-        char * line = malloc(sizeof(DATASIZE));
+        char * line = malloc(DATASIZE);
         while (fscanf(file, "%s\n", line) > 0)
         {   
             strcpy(version_path, "iris-server/projects/");
