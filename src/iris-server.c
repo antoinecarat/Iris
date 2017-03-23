@@ -10,6 +10,9 @@
 
 #include "iris-server.h"
 
+pthread_cond_t condition = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void init()
 {
     create_dir("iris-server");
@@ -226,7 +229,9 @@ void treat(int client_socket)
                 break;
 
             case PUSH:
-                //TODO: Use mutex to avoid collisions between several clients.
+                //Avoid collisions between several clients.
+                pthread_mutex_lock (&mutex);
+
                 printf("Push request...\n");
                 latest = get_latest(datagram->project_name);
 
@@ -341,7 +346,8 @@ void treat(int client_socket)
                             }   
                         }                           
                     }
-                }       
+                }
+                pthread_mutex_unlock (&mutex);     
                 break;
 
             case REBASE:

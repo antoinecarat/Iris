@@ -19,4 +19,4 @@ To do so, the following commands would be useful:
 ##### rm -rf iris/projects/*your-project-name*
 ##### iris clone *your-project-name* *server-adress* *server-port* *your-name*
 
-## Step 3: Work and notify iris
+## Step 3: Work and notify iris 
