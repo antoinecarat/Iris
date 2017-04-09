@@ -1,1 +1,0 @@
-Ceci est un texte ayant pour but de tester le decoupage en datagrames du present fichier. L'objectif etant de decouper ce fichier en paquets de 256 caracteres maximum. Il parrait fort probable que la cesure doivent s'effectuer d'ici une vingtaine de caracteres.

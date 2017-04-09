@@ -59,10 +59,5 @@ void treat(int client_socket);
 */
 void *thread_client(void *arg);
 
-/**
- * @brief Main
-*/
-//void main(int argc, char **argv);
-
 #endif //__IRISSERVER_H__
 

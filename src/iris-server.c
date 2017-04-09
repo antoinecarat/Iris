@@ -221,7 +221,6 @@ void treat(int client_socket)
             case PULL:
                 printf("Clone/Pull request...\n");
 
-                //TODO: check if project exists
                 latest = get_latest(datagram->project_name);
                 
                 send_dir(client_socket, datagram->project_name, " ", datagram->transaction, latest, datagram->user_name, 1);
@@ -358,7 +357,7 @@ void treat(int client_socket)
                 printf("Mkdir request...\n");
                 char* version = malloc(3);
                 sprintf(version, "%d", latest);
-                //char * real_path = malloc(21 + strlen(datagram->project_name) + 2 + 3 + 1 + strlen(datagram->file_path));
+                
                 char * real_path = malloc(DATASIZE);
                 strcpy(real_path, "iris-server/projects/");
                 strcat(real_path, datagram->project_name);
@@ -398,8 +397,7 @@ void list_projects()
 {
     FILE *file;
     FILE *version_file;
-//    char *projects_path = malloc(21);
-//    char *version_path = malloc(50);
+
     char *projects_path = malloc(DATASIZE);
     char *version_path = malloc(DATASIZE);
     strcpy(projects_path,"iris-server/.projects");
@@ -417,7 +415,7 @@ void list_projects()
             strcat(version_path, "/.version");
             
             int version;
-            //char * user = malloc(20);
+            
             char * user = malloc(DATASIZE);
             if((version_file = fopen(version_path,"r+")) != NULL)
             {

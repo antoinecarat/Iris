@@ -110,13 +110,6 @@ void rebuild_file(char* project_name, char* file_path, unsigned int version,
                   datagram_t** tab, int on_server);
 
 /**
- * @brief Free a datagram memory.
- *
- * @param datagram datagram.
- */
-void free_datagram(datagram_t* datagram);
-
-/**
 * @brief Create a directory.
 *
 * @param dir_path Name of the directory to be created. 
@@ -129,20 +122,6 @@ void create_dir(char* dir_path);
 * @param dir_path Name of the directory to be renamed. 
 */
 void clean_dir(char* dir_path);
-
-/**
-* @brief Copy a directory.
-*
-* @param dir_path Name of the directory to be copied. 
-*/
-void copy_dir(char* dir_path);
-
-/**
-* @brief Remove a directory.
-*
-* @param dir_path Name of the directory to be removed. 
-*/
-void remove_dir(char* dir_path);
 
 
 #endif //__FILEMANAGER_H__

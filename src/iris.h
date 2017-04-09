@@ -61,18 +61,6 @@ void pull(char* project_name, char* server_adress, unsigned int server_port, cha
 void push(char* project_name, char* server_adress, unsigned int server_port, char * user_name);
 
 /**
- * @brief Retrieving a specific version from remote repository.
- * 
- * @param project_name Name of the project
- * @param version The specific version
- * @param server_adress Name of the server
- * @param server_port Port of the server
- * @param user_name Name of the user
-*/
-void rebase(char* project_name, unsigned int version, char* server_adress, unsigned int server_port, char * user_name);
-
-
-/**
  * @brief Notify that a file has been added.
  * 
  * @param project_name Name of the project
@@ -102,11 +90,6 @@ void del(char* project_name, char* file_path);
  * @param project_name Name of the project
 */
 void status(char* project_name);
-
-/**
- * @brief Main
-*/
-//void main(int argc, char **argv);
 
 #endif //__IRIS_H__
 

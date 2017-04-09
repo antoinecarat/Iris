@@ -28,8 +28,6 @@ int connect_to_server(char* name, unsigned int port)
     local_adress.sin_family = AF_INET;
     local_adress.sin_port = htons(port);
 
-    //printf("Server port: %d \n", ntohs(local_adress.sin_port));
-    
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         perror("Error: Cannot create socket.");
@@ -121,19 +119,12 @@ void send_file(int socket, char* project_name, char* file_path,
 
 		send_datagram(socket, data[i]);
 	}
-
-    // unsigned int j=0;
-    // for(j=0; data[j] != NULL; ++j) {
-    //     free_datagram(data[j]);
-    // }
-    // free(data);
 }
 
 void send_dir(int socket, char* project_name, char* dir_path, 
               transaction_t transaction, unsigned int version,
               char* user_name, int on_server)
 {
-    //char * real_path = malloc(16 + strlen(project_name) + strlen(dir_path));
     char * real_path = malloc(DATASIZE);
     if (on_server == 0)
     {
@@ -178,7 +169,6 @@ void send_dir(int socket, char* project_name, char* dir_path,
             if(strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
             {
                 if(entry->d_type ==  DT_DIR) {
-                    //char * new_dir_path = malloc(strlen(dir_path) + 2 + strlen(entry->d_name));
                     char * new_dir_path = malloc(DATASIZE);
                     if (strcmp(dir_path, " ") != 0)
                     {
@@ -203,9 +193,8 @@ void send_dir(int socket, char* project_name, char* dir_path,
 
                     send_dir(socket, project_name, new_dir_path, transaction, version, user_name, on_server);
                     free(new_dir_path);
-                    //free_datagram(datagram);
+                    
                 } else if(entry->d_type == DT_REG) {
-                    //char * file_path = malloc(strlen(dir_path) + 1 + strlen(entry->d_name));
                     char * file_path = malloc(DATASIZE);
                     
                     if (strcmp(dir_path, " ") != 0)

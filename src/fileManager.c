@@ -15,12 +15,7 @@
 
 char* serialize(datagram_t* datagram)
 {
-	//char* res = malloc(12 * sizeof(char) + strlen(datagram->project_name)
-	//									 + strlen(datagram->user_name)
-	//									 + strlen(datagram->file_path)
-	//									 + strlen(datagram->data));
 	char * res = malloc(12 * sizeof(char) + 4 * DATASIZE);
-	//char* tmp = malloc(3 * sizeof(char));
 	char * tmp = malloc(DATASIZE);
 
 	sprintf(tmp, "%d", datagram->transaction);
@@ -90,8 +85,7 @@ datagram_t **prepare_file(char* project_name, char* file_path,
    	datagram_t** data_tab;
 
    	//Construct real path
-   	//char * real_path = malloc(14 + strlen(project_name) + 2 + strlen(file_path));
-    char * real_path = malloc(DATASIZE);
+   	char * real_path = malloc(DATASIZE);
 
    	if (on_server == 0)
     {
@@ -189,17 +183,11 @@ void rebuild_file(char* project_name, char* file_path, unsigned int version, dat
 	  	for(i=0; i<tab[0]->datagram_total; ++i) {
 		   fwrite(tab[i]->data, tab[i]->data_length, 1, file);
 		}
-	  	fclose(file);    	
+	  	fclose(file);
     }
-
-
-
 }
 
-void free_datagram(datagram_t* datagram)
-{
-  	//free(datagram);
-}
+
 
 void create_dir(char* dir_path)
 {
@@ -241,20 +229,10 @@ void clean_dir(char* dir_path)
                 	rmdir(tmp);
                 } else if(entry->d_type == DT_REG)
                 {
-		        	int ret = remove(real_path);
+		        	remove(real_path);
 		        }
 		    }
         }
         closedir(directory);
     }
-}
-
-void copy_dir(char* dir_path) 
-{
-
-}
-
-void remove_dir(char* dir_path)
-{
-	
 }
